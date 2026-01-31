@@ -1,6 +1,6 @@
 {
   "name": "accessible_find_in_page",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "This extention attempts to solve my issue with finding the position of matching terms in a CTRL+F search. When the user interacts with the ctrl+f popup, either by changing the term or finding the next or prior occurence, the line containing the term blinks for a short time, configurable in the options page.",
   "main": "dist/background/index.js",
   "scripts": {
