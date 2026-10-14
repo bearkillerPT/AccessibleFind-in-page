@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Shadow</title></head>
+<body>
+  <p>light needle</p>
+  <x-open><span>slotted needle</span></x-open>
+  <x-closed></x-closed>
+  <script>
+    document.querySelector('x-open').attachShadow({ mode: 'open' }).innerHTML =
+      '<p>open needle</p><div><slot></slot></div>';
+    document.querySelector('x-closed').attachShadow({ mode: 'closed' }).innerHTML =
+      '<p>closed needle</p>';
+  </script>
+</body>
+</html>

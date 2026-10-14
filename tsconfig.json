@@ -1,23 +1,33 @@
 {
+  "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2021",
-    "module": "ES2022",
-    "moduleResolution": "Bundler",
-    "lib": ["ES2021", "DOM"],
-    "rootDir": "src",
-    "outDir": "dist",
+    "jsx": "react-jsx",
     "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noEmitOnError": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "allowJs": false,
-    "esModuleInterop": true,
-    "types": ["chrome"],
-    "verbatimModuleSyntax": true
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "~/*": [
+        "./src/*"
+      ],
+      "@@/*": [
+        "./*"
+      ],
+      "~~/*": [
+        "./*"
+      ]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    ".wxt/wxt.d.ts",
+    "src",
+    "tests",
+    "wxt.config.ts",
+    "vitest.config.ts",
+    "playwright.config.ts"
+  ]
 }

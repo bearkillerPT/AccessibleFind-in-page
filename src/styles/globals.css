@@ -1,0 +1,183 @@
+/*
+ * Accessible Find brand theme for shadcn/ui. See docs/BRAND.md.
+ * Everything is sized in rem; each page sets the root font size from the
+ * "text size" preference, so the whole UI scales together.
+ */
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("/fonts/AtkinsonHyperlegibleNext-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-sans);
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* Brand colors, usable as bg-beam, text-signal, etc. */
+  --color-night: var(--night);
+  --color-beam: var(--beam);
+  --color-signal: var(--signal);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Light: "Daylight". Night-blue ink and buttons, beam yellow as the accent. */
+:root {
+  --night: #0b1020;
+  --beam: #ffd60a;
+  --signal: #ff8a00;
+
+  --background: #f4f6fc;
+  --foreground: #0b1020;
+  --card: #ffffff;
+  --card-foreground: #0b1020;
+  --popover: #ffffff;
+  --popover-foreground: #0b1020;
+  --primary: #0b1020;
+  --primary-foreground: #ffd60a;
+  --secondary: #e6ebf7;
+  --secondary-foreground: #0b1020;
+  --muted: #e6ebf7;
+  --muted-foreground: #46557e;
+  --accent: #e6ebf7;
+  --accent-foreground: #0b1020;
+  --destructive: #c62828;
+  --border: #c9d2ea;
+  --input: #7c8bb5;
+  --ring: #b45309;
+  --success: #15803d;
+  --warning: #fff4c2;
+  --warning-foreground: #5c4400;
+  --radius: 0.75rem;
+}
+
+/* Dark: "Night". The default look, and the one the find bar is designed around. */
+.dark {
+  --background: #0b1020;
+  --foreground: #f4f6fc;
+  --card: #121a31;
+  --card-foreground: #f4f6fc;
+  --popover: #121a31;
+  --popover-foreground: #f4f6fc;
+  --primary: #ffd60a;
+  --primary-foreground: #0b1020;
+  --secondary: #1a2547;
+  --secondary-foreground: #f4f6fc;
+  --muted: #1a2547;
+  --muted-foreground: #b4c0e0;
+  --accent: #26335c;
+  --accent-foreground: #f4f6fc;
+  --destructive: #ff7b7b;
+  --border: #26335c;
+  --input: #5a6a9a;
+  --ring: #ffd60a;
+  --success: #4ade80;
+  --warning: #3b2f05;
+  --warning-foreground: #ffe58a;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring;
+  }
+  html {
+    @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  /* Native focus outline for anything the components don't style themselves. */
+  :focus-visible {
+    outline: 3px solid var(--ring);
+    outline-offset: 2px;
+  }
+  [data-slot]:focus-visible {
+    outline: none;
+  }
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  select,
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+}
+
+/*
+ * Chrome styles every extension page's body with the system's UI font at 75% size. Outside
+ * the layers, this wins over that: the brand font everywhere, and text that follows the
+ * text size preference instead of shrinking to three quarters of it.
+ */
+html body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* The find bar iframe: let the page show through around the rounded panel. */
+html.transparent,
+html.transparent body {
+  background: transparent;
+}
+
+/* Native controls (scrollbars, select menus) follow the theme. */
+.dark {
+  color-scheme: dark;
+}

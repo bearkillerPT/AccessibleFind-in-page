@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- 16 and 32 px: no text lines, heavier strokes, so it stays crisp. -->
+  <rect width="128" height="128" rx="28" fill="#0B1020"/>
+  <rect x="30" y="46" width="48" height="22" rx="6" fill="#FF8A00"/>
+  <circle cx="54" cy="57" r="35" fill="none" stroke="#FFD60A" stroke-width="16"/>
+  <path d="M80 83 L106 109" stroke="#FFD60A" stroke-width="22" stroke-linecap="round"/>
+</svg>
