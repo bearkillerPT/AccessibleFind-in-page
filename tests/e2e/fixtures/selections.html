@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Selections</title></head>
+<body>
+  <p id="plain">plain paragraph with walrus inside</p>
+  <textarea id="area" style="position:absolute; left:10px; top:60px">textarea with narwhal inside</textarea>
+  <x-card style="display:block; margin-top: 80px"></x-card>
+  <iframe id="frame" srcdoc="<p>framed text with octopus inside</p>" style="width:400px;height:80px"></iframe>
+  <p id="long">This is a long paragraph that goes on and on. It describes the coast, the cliffs, the lighthouse, the boats, the fishermen and the cafe at the top of the steps, and keeps going well past three hundred characters so that selecting all of it makes a long selection for testing. It then adds a few more sentences about the weather, the tides and the walk back to the bus stop, just to be sure.</p>
+  <script>
+    document.querySelector('x-card').attachShadow({ mode: 'open' }).innerHTML = '<p id="inner">shadow text with axolotl inside</p>';
+  </script>
+</body>
+</html>

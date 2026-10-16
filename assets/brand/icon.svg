@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1A2547"/>
+      <stop offset="1" stop-color="#0B1020"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#night)"/>
+  <!-- Lines of text inside the lens; the middle one is the highlighted match. -->
+  <rect x="35" y="36" width="30" height="6" rx="3" fill="#5B6B95"/>
+  <rect x="32" y="49" width="44" height="16" rx="5" fill="#FF8A00"/>
+  <rect x="35" y="72" width="24" height="6" rx="3" fill="#5B6B95"/>
+  <!-- The lens and handle: the "beam". -->
+  <circle cx="54" cy="57" r="35" fill="none" stroke="#FFD60A" stroke-width="12"/>
+  <path d="M80 83 L106 109" stroke="#FFD60A" stroke-width="17" stroke-linecap="round"/>
+</svg>

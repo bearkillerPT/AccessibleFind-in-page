@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>display: contents</title></head>
+<body>
+  <p>plain zebra</p>
+  <div style="display: contents">contents zebra</div>
+  <x-fallback></x-fallback>
+  <script>
+    // A slot with no assigned content shows its fallback text. Slots are display:contents.
+    document.querySelector('x-fallback').attachShadow({ mode: 'open' }).innerHTML = '<slot>fallback zebra</slot>';
+  </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><title>Dynamic</title></head>
+<body>
+  <p id="counter">tick 0</p>
+  <p>static needle here</p>
+  <p id="shrinking">walrus walrus walrus</p>
+  <div id="list"></div>
+  <div id="editor" contenteditable="true">editable needle text</div>
+  <script>
+    // Like a UI framework: keep a reference to a text node and update it in place.
+    // If an extension replaced this node, the updates would stop reaching the page.
+    const node = document.getElementById('counter').firstChild;
+    let n = 0;
+    window.__ticks = () => n;
+    setInterval(() => { n++; node.data = 'tick ' + n; }, 50);
+    // Shortens a text node in place, as a framework re-rendering it would.
+    window.shrink = () => { document.getElementById('shrinking').firstChild.data = 'w'; };
+    window.addNeedles = (count) => {
+      for (let i = 0; i < count; i++) {
+        const p = document.createElement('p');
+        p.textContent = 'added needle ' + i;
+        document.getElementById('list').append(p);
+      }
+    };
+  </script>
+</body>
+</html>

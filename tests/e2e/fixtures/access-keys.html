@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Access keys</title>
+  <style>
+    body { font: 18px/1.5 Georgia, serif; max-width: 40rem; margin: 2rem auto; }
+    textarea { width: 100%; font: inherit; }
+  </style>
+</head>
+<body>
+  <!-- Like Wikipedia's "Recent changes": on Windows and Linux, Alt+R follows this link. -->
+  <nav><a href="#recent-changes" accesskey="r">Recent changes</a></nav>
+  <p id="text">The lighthouse stood on the rocks. Every night its beam swept the bay.</p>
+  <p><label>Notes <textarea id="notes" rows="2">First line. The second sentence is here. Last.</textarea></label></p>
+  <script>
+    // The keys the page itself gets to see.
+    window.keysSeen = [];
+    addEventListener('keydown', (e) => keysSeen.push(e.key), true);
+  </script>
+</body>
+</html>

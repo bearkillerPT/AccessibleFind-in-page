@@ -1,21 +1,46 @@
 {
-  "name": "accessible_find_in_page",
-  "version": "1.1.1",
-  "description": "This extention attempts to solve my issue with finding the position of matching terms in a CTRL+F search. When the user interacts with the ctrl+f popup, either by changing the term or finding the next or prior occurence, the line containing the term blinks for a short time, configurable in the options page.",
-  "main": "dist/background/index.js",
-  "scripts": {
-    "build:ts": "tsc -p tsconfig.json",
-    "build:popup": "npm --prefix popup-app install --no-audit --no-fund && npm --prefix popup-app run build",
-    "build:onboarding": "npm --prefix onboarding-app install --no-audit --no-fund && npm --prefix onboarding-app run build",
-    "build": "npm run build:ts && npm run build:popup && npm run build:onboarding",
-    "prepare:windows": "Compress-Archive -Path manifest.json,128.png,dist -DestinationPath extension.zip" 
-  },
+  "name": "accessible-find-in-page",
+  "version": "2.0.0",
+  "private": true,
+  "description": "An accessibility-focused replacement for the browser's find-in-page (Ctrl+F), with customizable, high-visibility highlighting.",
   "author": "Gil Teixeira",
-  "license": "ISC",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "wxt build --mode e2e && playwright test",
+    "postinstall": "wxt prepare",
+    "icons": "node scripts/render-icons.mjs",
+    "store-assets": "wxt build --mode e2e && STORE_ASSETS=store playwright test store-assets",
+    "store-video": "wxt build --mode e2e && STORE_VIDEO=store playwright test store-video"
+  },
   "dependencies": {
-    "@types/chrome": "^0.0.180"
+    "class-variance-authority": "^0.7.1",
+    "cn": "^0.4.0",
+    "lucide-react": "^1.56.0",
+    "radix-ui": "^1.8.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "typescript": "^5.6.3"
+    "@playwright/test": "1.58.2",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@wxt-dev/module-react": "^1.2.2",
+    "happy-dom": "^21.0.1",
+    "shadcn": "^4.21.4",
+    "tailwindcss": "^4.3.3",
+    "tw-animate-css": "^1.4.0",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.4",
+    "wxt": "^0.21.4"
   }
 }

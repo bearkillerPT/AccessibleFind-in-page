@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Fake speech engine (tests only)",
+  "version": "1.0",
+  "description": "A voice that records what Chrome asks it to say. Used by real-keys.spec.ts.",
+  "permissions": ["ttsEngine"],
+  "tts_engine": {
+    "voices": [{ "voice_name": "Fake English", "lang": "en-US", "event_types": ["start", "end"] }]
+  },
+  "background": { "service_worker": "sw.js" }
+}
