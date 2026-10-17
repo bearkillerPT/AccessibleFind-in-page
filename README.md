@@ -2,19 +2,19 @@
 
 This project is an accessibility-focused browser extension intended to replace the default find-in-page (Ctrl+F) of Chromium-based browsers. I've been diagnosed with Retinitis Pigmentosa, a degenerative eye condition that severely impacts my vision. As a result, I found it challenging to use the default find-in-page feature, which often made it difficult to locate search results on a page. This extension aims to address these challenges with large, customizable highlights and effects that make results easy to see and easy to locate.
 
-<img src="docs/images/find-bar.png" alt="The find bar searching for “lighthouse”: all matches highlighted in yellow, the current one in orange with a border, the rest of the page dimmed, and the current match repeated in large text right below it" width="720" />
+<img src="docs/images/find-bar.png" alt="The find bar searching for “lighthouse”: every match highlighted in yellow, the current one dark with yellow text in an orange frame, the rest of the page dimmed, and the current match repeated in large text right below it" width="720" />
 
 ## Features
 
 - **Highlights you can see:** your own colors for matches and for the current match, an underline that doesn't rely on color, and a border around the current match.
-- **Find the current match quickly:** blinking and a ring that shrinks onto the match, plus a spotlight that dims the rest of the page, guide lines across the screen, and a magnifier that repeats the match in large text right next to it, which you can turn on from the find bar. The find bar steps aside if it would cover the match.
+- **Find the current match quickly:** blinking and a ring that shrinks onto the match (as slow and as thick as you like), plus a spotlight that dims the rest of the page, guide lines across the screen, and a magnifier that repeats the match in large text right next to it, which you can turn on from the find bar. The find bar steps aside if it would cover the match.
 - **All matches at a glance:** a list of every match with the words around it, in large text. Move through it with the arrow keys and the page follows.
-- **Read aloud:** hear the sentence around the current match, or have each match read as you move to it, with the browser's built-in voices. Select text on any page and press Alt+R to hear it, even with the find bar closed.
-- **Automatic style:** matches on a dark background, on a dark website or in a code block on a light one, take the colors of a profile made for dark backgrounds ("High contrast (dark pages)", or one you choose). The others keep your profile's colors, and your other options stay the same.
+- **Read aloud:** hear the sentence around the current match, or have each match read as you move to it, with the browser's built-in voices. Paste any text into the find bar to hear it too. Select text on any page and press your read aloud shortcut to hear it, even with the find bar closed (set it once on Chrome's extension shortcuts page; the suggested key is Alt+R).
+- **Automatic style:** matches on a dark background, on a dark website or in a code block on a light one, switch to colors made for dark backgrounds. Every profile has its own, which you can change too.
 - **A big, readable find bar** with adjustable text size (100–300%), light and dark themes, six screen positions, and your recent searches on the arrow keys (kept on your device only).
 - **Smarter search:** finds text across links and formatting, ignores accents and case unless you ask (`acao` finds “Ação”), treats curly and straight quotes alike, matches whole words if you want, and searches inside web components. Opens collapsed sections that contain a match, like the browser does.
 - **Doesn't break pages:** highlights are painted by the browser (CSS Custom Highlight API) without changing the page, so web apps and editors keep working.
-- **Profiles:** save several styles, or start from the built-in high-contrast and colour-blind-friendly ones, which you can change and reset.
+- **Profiles for your eyes:** built-in color profiles for cataracts, light sensitivity, and red-green, blue-yellow or no color vision. You can change and reset them, or make your own, from scratch or from a copy. The settings show each profile's colors beside how they look on light and on dark pages.
 - **Keyboard first:** every action has a key (see below). Screen readers hear the match count and the words around the match.
 - **Your shortcuts:** the find bar's Alt shortcuts can be changed one by one or all at once (to Ctrl+Alt, Alt+Shift, Ctrl+Shift, or on Linux the Super/Windows logo key), for systems where Alt is taken, like i3 and other window managers.
 - **Backups and shared profiles:** save all your settings to a file and restore them, or export a single profile to share it with others.
@@ -43,26 +43,30 @@ You need Node.js 22 or newer (`nvm use` picks it up from `.nvmrc`).
 After installing, a welcome page opens. Choose how Ctrl+F should work:
 
 - **Ctrl+F on every website (recommended).** Accessible Find opens when you press Ctrl+F on any site. On pages extensions aren't allowed to run on, the browser's own find opens instead, so Ctrl+F always does something. Your browser will ask you to allow access to all websites, because the extension has to be on each page to notice Ctrl+F. It only reads a page when you search it, and your searches never leave your device.
-- **Keyboard shortcut only.** No site access needed. The default shortcut is Alt+Shift+F, and you can set it to Ctrl+F on the browser's shortcuts page (`chrome://extensions/shortcuts`). On protected pages you'll get a message explaining why it can't run.
+- **Keyboard shortcut only.** No site access needed. The default shortcut is Alt+Shift+F, and you can set it to Ctrl+F on the browser's shortcuts page (`chrome://extensions/shortcuts`). On pages it can't run on, a message explains why, and pressing the shortcut again opens the browser's own find (with Ctrl+F; with another key, Ctrl+F goes straight there).
 
 You can also click the toolbar icon. Change everything later from the find bar's quick settings or the full settings page.
+
+<img src="docs/images/quick-settings.png" alt="The find bar's quick settings, open under the search box: the profile, switches for blinking, the ring, the spotlight, the magnifier, guide lines, the underline and the automatic style, and the text size" width="720" />
+
+<img src="docs/images/settings.png" alt="The settings page at Highlight style: the profile with New profile, Duplicate and Rename, and side by side, how matches look on light pages and on dark pages, each above its own colors" width="720" />
 
 | Key | Action |
 | --- | --- |
 | Enter / Shift+Enter | Next / previous match |
 | ↑ / ↓ | Recent searches, or the previous / next match while the list is open |
 | Alt+L | Show or hide the list of all matches |
-| Alt+R | Read aloud: the current match, or the text you selected (press again to stop) |
+| Alt+R | Read aloud: the current match, the text you selected, or text you pasted into the find bar (press again to stop) |
 | F3, Ctrl+G (Shift for previous) | Next / previous match, even when the page has focus |
 | Ctrl+Enter | Open the link (or press the button) at the current match |
 | Esc | Close, leaving the current match selected |
 | Alt+C / Alt+A / Alt+W | Match case / match accents / whole words only |
 
-The Alt shortcuts can be changed in the settings, under Find bar shortcuts. Alt+R also works on any page without the find bar, with no site access needed: it reads the selected text, or the sentence you last clicked in, or what you typed in a text box (never a password). That one is a browser shortcut, "Read aloud the selected text", so websites can't take the key for themselves; change it on the browser's shortcuts page, like Alt+Shift+F.
+The Alt shortcuts can be changed in the settings, under Find bar shortcuts. Reading also works on any page without the find bar, with no site access needed: it reads the selected text, or the sentence you last clicked in, or what you typed in a text box (never a password). That needs a browser shortcut, "Read aloud the selected text", so websites can't take the key for themselves. Set or check it on the browser's extension shortcuts page (the Read aloud settings open it): the suggested key is Alt+R, but Chrome leaves it unset when another extension has it.
 
 ### Where it can't run
 
-Browsers don't let any extension run on their own pages (settings, history, the new tab page), on the extension store, or inside the built-in PDF viewer. Local files need **Allow access to file URLs** on the extension's details page. Text inside embedded frames and form fields isn't searched yet.
+Browsers don't let any extension run on their own pages (settings, history, the new tab page), on the extension store, or inside the built-in PDF viewer. Opening Accessible Find there shows why, and how to use the browser's own find instead. Local files need **Allow access to file URLs** on the extension's details page. Text inside embedded frames and form fields isn't searched yet.
 
 ## Ideas for the future
 
@@ -94,7 +98,7 @@ Not planned yet. If one of these would help you, please open an issue.
 | `npm run typecheck` | TypeScript checks |
 | `npm run icons` | Regenerates the PNG icons from `assets/brand/*.svg` |
 | `npm run store-assets` | Renders the Chrome Web Store screenshots and promo tiles into `store/` |
-| `npm run store-video` | Records the demo video, `store/demo.mp4` (needs `ffmpeg`) |
+| `npm run store-video` | Records the narrated demo video, `store/demo.mp4` (needs `ffmpeg` and a local Kokoro voice) |
 
 The extension is built with [WXT](https://wxt.dev), React, Tailwind CSS and [shadcn/ui](https://ui.shadcn.com). The design is documented in [docs/BRAND.md](docs/BRAND.md), and the rules for contributors (and AI coding agents) are in [AGENTS.md](AGENTS.md).
 

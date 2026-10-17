@@ -46,7 +46,7 @@ test('settings page renders, edits settings and stays free of errors', async ({ 
     .toBe('#123456');
 
   // Built-in profiles can be changed too: the change is kept, and they reset to how they came.
-  await page.getByRole('combobox', { name: 'Profile' }).selectOption({ label: 'High contrast (light pages)' });
+  await page.getByRole('combobox', { name: 'Profile' }).selectOption({ label: 'High contrast, inverted (cataracts)' });
   const builtInHex = page.getByRole('textbox', { name: 'Background (hex code)' }).first();
   await expect(builtInHex).toHaveValue('#000000');
   await expect(page.getByRole('button', { name: 'Reset to original' })).toHaveCount(0);
@@ -76,7 +76,7 @@ test('no settings page shows a disabled control', async ({ context, sw }) => {
   }
   // Built-in profiles are fully editable as well.
   await page.goto(`chrome-extension://${id}/options.html#appearance`);
-  await page.getByRole('combobox', { name: 'Profile' }).selectOption({ label: 'High contrast (dark pages)' });
+  await page.getByRole('combobox', { name: 'Profile' }).selectOption({ label: 'Red-green color blindness' });
   await expect(page.getByRole('textbox', { name: 'Background (hex code)' }).first()).toBeEditable();
   await expect(page.locator(':disabled, [aria-disabled="true"], [data-disabled]')).toHaveCount(0);
 });
@@ -165,4 +165,107 @@ test('online voices are marked, since they send the text away to be spoken', asy
     'Local English (en-US)',
   ]);
   await expect(select).toHaveAccessibleDescription(/Online voices send what’s read to your browser’s speech service/);
+});
+
+test('each profile’s colors sit beside how they look, on light and on dark pages', async ({ context, sw }) => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${new URL(sw.url()).host}/options.html#appearance`);
+  const light = page.getByRole('region', { name: 'On light pages' });
+  const dark = page.getByRole('region', { name: 'On dark pages' });
+  // Each with its sample page and its own colors.
+  await expect(light.getByRole('img', { name: 'How matches look on light pages' })).toBeVisible();
+  await expect(dark.getByRole('img', { name: 'How matches look on dark pages' })).toBeVisible();
+  await expect(light.getByRole('textbox', { name: 'Background (hex code)' }).first()).toHaveValue('#ffd60a');
+  const hex = dark.getByRole('region', { name: 'All matches' }).getByRole('textbox', { name: 'Background (hex code)' });
+  await hex.fill('#336699');
+  await hex.press('Enter');
+  await expect
+    .poll(() =>
+      sw.evaluate(async () => {
+        const stored = (await chrome.storage.sync.get('profile:default'))['profile:default'];
+        return (stored as { appearance: { dark: { matchBg: string } } } | undefined)?.appearance.dark.matchBg;
+      }),
+    )
+    .toBe('#336699');
+  // With automatic style off, dark pages use the light-page colors, and the dark ones are put away.
+  await dark.getByRole('switch', { name: 'Automatic style' }).click();
+  await expect(dark.getByRole('region', { name: 'All matches' })).toHaveCount(0);
+  await expect(dark.getByText('Off: matches on a dark background use the colors for light pages.')).toBeVisible();
+  await expect
+    .poll(() => sw.evaluate(async () => ((await chrome.storage.sync.get('prefs')).prefs as { autoProfile: { enabled: boolean } }).autoProfile.enabled))
+    .toBe(false);
+});
+
+test('a new profile starts from the default style, ready to be named', async ({ context, sw }) => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${new URL(sw.url()).host}/options.html#appearance`);
+  // From a built-in one, to show it doesn't copy it.
+  await page.getByRole('combobox', { name: 'Profile' }).selectOption({ label: 'Red-green color blindness' });
+  await page.getByRole('button', { name: 'New profile' }).click();
+  const name = page.getByRole('textbox', { name: 'Profile name' });
+  await expect(name).toBeFocused();
+  await expect(name).toHaveValue('New profile');
+  await name.fill('My colors');
+  await name.press('Enter');
+  await expect(page.getByRole('combobox', { name: 'Profile' })).toHaveValue(/.+/);
+  await expect(page.getByRole('combobox', { name: 'Profile' }).locator('option:checked')).toHaveText('My colors');
+  await expect(
+    page.getByRole('region', { name: 'On light pages' }).getByRole('textbox', { name: 'Background (hex code)' }).first(),
+  ).toHaveValue('#ffd60a');
+});
+
+test('where it can’t run, the popup leads with the key for the browser’s own find', async ({ context, sw }) => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${new URL(sw.url()).host}/unavailable.html?reason=browser-page`);
+  const heading = page.getByRole('heading', { level: 1 });
+  await expect(heading).toHaveText(/^Press\s*Ctrl\s*F\s*to use the browser’s own find$/);
+  await expect(heading).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Change shortcut' })).toHaveCount(0);
+
+  // With Accessible Find's own shortcut on Ctrl+F, it took the first press; the next one is the browser's.
+  await page.addInitScript(() => {
+    const commands = [{ name: 'open_popup', shortcut: 'Ctrl+F', description: '' }];
+    Object.defineProperty(chrome.commands, 'getAll', { value: async () => commands });
+  });
+  await page.reload();
+  await expect(heading).toHaveText(/^Press\s*Ctrl\s*F\s*again to use the browser’s own find$/);
+  await expect(page.getByText(/Your shortcut for Accessible Find is Ctrl\+F, so it takes the first press/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Change shortcut' })).toBeVisible();
+});
+
+test('the ring’s duration and thickness can be changed, and are only offered while the ring is on', async ({
+  context,
+  sw,
+}) => {
+  const page = await context.newPage();
+  await page.goto(`chrome-extension://${new URL(sw.url()).host}/options.html#appearance`);
+  const duration = page.getByRole('slider', { name: 'Ring duration' });
+  await expect(duration).toHaveAttribute('aria-valuenow', '750');
+  await duration.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(() =>
+      sw.evaluate(async () => {
+        const all = await chrome.storage.sync.get(null);
+        return (all[`profile:${all.activeProfileId}`] as { appearance: { ping: { durationMs: number } } } | undefined)
+          ?.appearance.ping.durationMs;
+      }),
+    )
+    .toBe(800);
+  const thickness = page.getByRole('slider', { name: 'Ring thickness' });
+  await expect(thickness).toHaveAttribute('aria-valuenow', '4');
+  await thickness.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect
+    .poll(() =>
+      sw.evaluate(async () => {
+        const all = await chrome.storage.sync.get(null);
+        return (all[`profile:${all.activeProfileId}`] as { appearance: { ping: { width: number } } } | undefined)
+          ?.appearance.ping.width;
+      }),
+    )
+    .toBe(5);
+  await page.getByRole('switch', { name: 'Ring', exact: true }).click();
+  await expect(duration).toHaveCount(0);
+  await expect(thickness).toHaveCount(0);
 });

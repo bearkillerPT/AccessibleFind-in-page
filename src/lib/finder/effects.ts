@@ -53,7 +53,8 @@ const EFFECTS_CSS = `
   letter-spacing: 0.01em; white-space: normal; overflow-wrap: anywhere; text-align: left;
   box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6);
 }
-.magnifier mark { border-radius: 4px; padding: 0 0.12em; }
+/* Framed like the current match on the page, which may be as dark as the magnifier itself. */
+.magnifier mark { border-radius: 4px; padding: 0 0.12em; margin: 0 0.1em; }
 `;
 
 function div(className: string): HTMLDivElement {
@@ -114,8 +115,9 @@ export class Effects {
     this.magnifier.style.borderColor = a.currentBorder;
     this.magnifierMark.style.background = a.currentBg;
     this.magnifierMark.style.color = a.currentText;
+    this.magnifierMark.style.boxShadow = `0 0 0 0.08em ${a.currentBorder}`;
     this.ping.style.borderColor = a.currentBorder;
-    this.ping.style.borderWidth = `${Math.max(4, a.borderWidth + 1)}px`;
+    this.ping.style.borderWidth = `${a.ping.width}px`;
     this.update();
   }
 
@@ -255,7 +257,7 @@ export class Effects {
         { ...frame(end.left, end.top, end.width, end.height, 1), offset: 0.8 },
         frame(end.left, end.top, end.width, end.height, 0),
       ],
-      { duration: 750, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' },
+      { duration: a.ping.durationMs, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)' },
     );
     this.pingAnimation.onfinish = () => {
       this.ping.style.display = 'none';

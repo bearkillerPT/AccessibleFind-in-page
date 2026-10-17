@@ -277,10 +277,10 @@ test('the practice page uses light-page colors for its white article, even in th
   await page.goto(`chrome-extension://${id}/practice.html`);
   await page.getByRole('button', { name: 'Open the find bar' }).click();
   const bar = await findBar(page);
-  await search(bar, 'mountain');
+  await search(bar, 'lighthouse');
   await expect(status(bar)).toHaveText(/of 6$/);
   await bar.getByRole('button', { name: 'Quick settings' }).click();
-  await expect(bar.locator('#quick-settings')).toContainText('On dark backgrounds, matches use the colors of');
+  await expect(bar.locator('#quick-settings')).toContainText('On dark backgrounds, matches switch to colors made for them.');
   await expect(bar.locator('#quick-settings')).not.toContainText('This page looks dark');
 });
 

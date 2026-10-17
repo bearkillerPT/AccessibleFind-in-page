@@ -399,7 +399,8 @@ export function FindBar() {
       <p id="find-help" className="sr-only">
         Enter for the next match, Shift+Enter for the previous one. Up and down arrows recall recent searches, or move
         through matches when the list is open. {keys('list')} lists all matches, {keys('readAloud')} reads the match
-        aloud (or the text selected on the page), Control+Enter opens a link at the match, Escape closes.
+        aloud (or the text selected on the page, or text you paste here), Control+Enter opens a link at the match,
+        Escape closes.
       </p>
       {context && (
         <p className="mt-2 rounded-lg bg-background px-3 py-1.5 text-lg leading-snug">

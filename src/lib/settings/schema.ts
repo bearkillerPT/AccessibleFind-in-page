@@ -37,6 +37,11 @@ export function isBuiltInId(id: string): boolean {
   return builtInProfile(id) !== undefined;
 }
 
+/** Ids starting "sys-" belong to built-in profiles, past and future; user profiles never get one. */
+export function isReservedId(id: string): boolean {
+  return id.startsWith('sys-');
+}
+
 /** Whether two appearances are the same, once cleaned up. */
 export function sameAppearance(a: Appearance, b: Appearance): boolean {
   return JSON.stringify(sanitizeAppearance(a)) === JSON.stringify(sanitizeAppearance(b));
@@ -74,7 +79,7 @@ export function appearanceFromV1(input: unknown): Appearance {
 export function migrateV1(raw: Raw): Raw {
   const v1Profiles = Array.isArray(raw.profiles) ? raw.profiles.filter(isObj) : [];
   const users: Profile[] = v1Profiles
-    .filter((p) => typeof p.id === 'string' && p.id && !isBuiltInId(p.id))
+    .filter((p) => typeof p.id === 'string' && p.id && !isReservedId(p.id))
     .map((p) => ({
       id: p.id as string,
       name: sanitizeName(p.name, 'Profile'),
@@ -113,7 +118,7 @@ export function stateFromRaw(input: Raw): SettingsState {
   const users: Profile[] = [];
   for (const id of new Set(order)) {
     const stored = raw[profileKey(id)];
-    if (!isObj(stored) || isBuiltInId(id)) continue;
+    if (!isObj(stored) || isReservedId(id)) continue;
     users.push({
       id,
       name: sanitizeName(stored.name, 'Profile'),
@@ -133,39 +138,28 @@ export function stateFromRaw(input: Raw): SettingsState {
   const wanted = typeof raw.activeProfileId === 'string' ? raw.activeProfileId : '';
   const active = profiles.find((p) => p.id === wanted) ?? users[0]!;
   const prefs = sanitizePrefs(raw.prefs);
-  // The profile for dark pages may have been deleted.
-  if (!profiles.some((p) => p.id === prefs.autoProfile.dark)) prefs.autoProfile.dark = DEFAULT_PREFS.autoProfile.dark;
   return { profiles, activeProfileId: active.id, active, prefs };
 }
 
-/**
- * The profile whose colors matches on a light or dark background use: on dark ones with
- * automatic style on, the one picked for them; otherwise the active profile.
- */
-export function colorProfileForPage(state: SettingsState, tone: PageTone | null): Profile {
-  const auto = state.prefs.autoProfile;
-  if (!auto.enabled || tone !== 'dark') return state.active;
-  return state.profiles.find((p) => p.id === auto.dark) ?? state.active;
-}
-
-/** `base` with the highlight colors of `source`. Effects, sizes and timings stay as in `base`. */
-export function withColorsFrom(base: Appearance, source: Appearance): Appearance {
+/** `a` with its colors for dark backgrounds in place of the usual ones. Everything else stays. */
+export function darkVersion(a: Appearance): Appearance {
+  const d = a.dark;
   return {
-    ...base,
-    matchBg: source.matchBg,
-    matchText: source.matchText,
-    underline: { ...base.underline, color: source.underline.color },
-    currentBg: source.currentBg,
-    currentText: source.currentText,
-    currentBorder: source.currentBorder,
+    ...a,
+    matchBg: d.matchBg,
+    matchText: d.matchText,
+    underline: { ...a.underline, color: d.underline },
+    currentBg: d.currentBg,
+    currentText: d.currentText,
+    currentBorder: d.currentBorder,
   };
 }
 
 /**
- * How matches look on a light or dark background. Automatic style only swaps the colors:
- * everything else (blinking, spotlight, magnifier, sizes...) always comes from the active profile.
+ * How matches look on a light or dark background: with automatic style on, dark ones get
+ * the active profile's colors for dark backgrounds.
  */
 export function appearanceForPage(state: SettingsState, tone: PageTone | null): Appearance {
-  const colors = colorProfileForPage(state, tone);
-  return colors.id === state.active.id ? state.active.appearance : withColorsFrom(state.active.appearance, colors.appearance);
+  const a = state.active.appearance;
+  return state.prefs.autoProfile.enabled && tone === 'dark' ? darkVersion(a) : a;
 }

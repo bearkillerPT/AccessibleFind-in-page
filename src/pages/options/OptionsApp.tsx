@@ -75,8 +75,16 @@ function Banner({ hash }: { hash: string }) {
           <ol className="list-decimal space-y-1.5 pl-6">
             <li>Choose how to open it, just below. Turning on {ctrlFLabel()} on every website is the easiest.</li>
             <li>
-              Pick a highlight style that’s easy for you to see. If the current match is still hard to find, turn on
-              the spotlight or the magnifier.
+              Pick a{' '}
+              <a href="#appearance" className="font-semibold underline underline-offset-2">
+                highlight style
+              </a>{' '}
+              that’s easy for you to see. There are profiles for cataracts, light sensitivity and color blindness.
+            </li>
+            <li>
+              If the current match is still hard to find, turn on an effect from the find bar’s quick settings: guide
+              lines and the ring reach a narrow field of view, and the magnifier helps when the middle of your sight is
+              missing.
             </li>
             <li>Go to any website and press {ctrlFLabel()}, or try it first on the practice page.</li>
           </ol>
@@ -93,6 +101,7 @@ function Banner({ hash }: { hash: string }) {
               'A larger find bar with match case, match accents and whole-word options, plus light and dark themes.',
               'A list of every match in large text, and recent searches with the arrow keys.',
               'Reading aloud: the current match, or text you select on any website.',
+              'Highlight profiles for cataracts, light sensitivity, and red-green, blue-yellow or no color vision.',
               'Automatic style: matches on dark backgrounds, like dark websites or code blocks, take colors that stand out there.',
             ].map((item, i) => (
               <li key={i} className="flex gap-2">

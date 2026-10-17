@@ -103,7 +103,7 @@ export function Practice() {
                     or <ShortcutKeys shortcut={shortcut} />
                   </>
                 ) : null}{' '}
-                and type <Try>mountain</Try>.
+                and type <Try>lighthouse</Try>.
               </Step>
               <Step n={2}>
                 Press <ShortcutKeys shortcut="Enter" /> for the next match and <ShortcutKeys shortcut="Shift+Enter" /> to
@@ -112,15 +112,15 @@ export function Practice() {
               <Step n={3}>
                 To make it stand out more, press the{' '}
                 <Settings role="img" aria-label="Quick settings" className="inline size-5 align-text-bottom" />{' '}
-                button in the find bar and turn on Spotlight or Magnifier. They stay on, on every website, until you
-                turn them off.
+                button in the find bar and turn on Spotlight, Guide lines or Magnifier. They stay on, on every website,
+                until you turn them off.
               </Step>
               <Step n={4}>
                 Press <ShortcutKeys shortcut={formatCombo(keys.list)} /> to list every match, then use the arrow keys to
                 move through them. <ShortcutKeys shortcut={formatCombo(keys.readAloud)} /> reads the match aloud.
               </Step>
               <Step n={5}>
-                Search for <Try>estancia</Try>: it also finds “Estância”, because accents are ignored unless you turn on
+                Search for <Try>camoes</Try>: it also finds “Camões”, because accents are ignored unless you turn on
                 Match accents.
               </Step>
               <Step n={6}>
@@ -158,52 +158,49 @@ export function Practice() {
           ref={articleRef}
           className="space-y-5 rounded-2xl border bg-white p-8 font-serif text-lg leading-relaxed text-neutral-900 shadow-sm"
         >
-          <h1 className="font-sans text-4xl font-bold leading-tight">Caramulo, up in the mountains</h1>
-          <p className="font-sans text-base text-neutral-600">Clean air, granite peaks and a museum full of classic cars</p>
+          <h1 className="font-sans text-4xl font-bold leading-tight">The lighthouse at Cabo da Roca</h1>
+          <p className="font-sans text-base text-neutral-600">Where the land ends and the sea begins</p>
           <p>
-            The village of Caramulo sits high in the Serra do Caramulo, a granite <strong>mountain</strong> range
-            between Viseu and the coast. A century ago, doctors sent patients here to breathe its clean air, and the
-            village grew up around their sanatoriums.
+            Cabo da Roca is the westernmost point of mainland Europe. Its cliffs rise about 140 metres above the
+            Atlantic, and near the edge stands a white <strong>lighthouse</strong> with a red lantern, first lit in
+            1772.
           </p>
           <p>
-            At its busiest, the Estância Sanatorial, as the health resort was known, drew patients from all over
-            Portugal. The sanatoriums closed once tuberculosis could be cured with medicine, but the moun
-            <em>tain</em> air is as clean as ever.
+            For two centuries, keepers climbed the stairs of the light<em>house</em> at dusk to light the lamp, and on
+            foggy nights they kept watch until morning. Its beam still guides ships along the coast.
           </p>
           <h2 className="font-sans text-2xl font-bold">Getting there</h2>
           <p>
-            Caramulo is under an hour by car from Viseu. The road climbs through pine woods and terraced fields, and
-            near the village, signs point to the{' '}
+            The cape is in the Sintra-Cascais Natural Park, about forty minutes from Lisbon by car. Buses from Sintra
+            and Cascais stop by the road, and a short path leads to the{' '}
             <a href="#visiting" className="text-blue-700 underline">
-              walking trails up the mountain
+              viewpoint beside the lighthouse
             </a>
             .
           </p>
           <p>
-            Walk up to Caramulinho, the highest point in the range, at just over a thousand metres. On clear days you
-            can see the Serra da Estrela to the east and, some say, the Atlantic to the west.
+            The wind here rarely stops. Bring a jacket, even in summer, and keep to the paths: the cliff edge is closer
+            than it looks.
           </p>
           <details className="rounded-lg border border-neutral-300 p-4">
             <summary className="cursor-pointer font-sans font-semibold">From the archive</summary>
             <p className="mt-3">
-              A visitor’s postcard, sent in August 1952: “Cold mornings, warm afternoons, and the valleys under a sea of
-              clouds. The mountain air is doing me good.”
+              A visitor’s postcard, sent in August 1952: “Fog in the morning, sun by noon, and at night the beam sweeps
+              across the water. We could see the light from our window.”
             </p>
           </details>
           <h2 id="visiting" className="font-sans text-2xl font-bold">
             Visiting
           </h2>
           <p>
-            The Caramulo Museum is the village’s best-known sight. One part holds paintings, including works by Picasso
-            and Dalí; the other is full of classic cars and motorcycles.
+            Next to the lighthouse stands a stone monument with a line by the poet Camões: “Onde a terra se acaba e o
+            mar começa”, where the land ends and the sea begins.
           </p>
           <p>
-            Every year, the Caramulo Motorfestival brings racing cars back to the mountain roads, and the village fills
-            with the sound of old engines.
+            People come from all over the world to stand beside the lighthouse at the edge of the continent and look
+            out at nothing but ocean.
           </p>
-          <p>
-            Before you leave, find a viewpoint at sunset, when the valleys fill with shadow and the granite turns gold.
-          </p>
+          <p>Stay for the sunset if you can. As the sun drops into the Atlantic, the cliffs turn gold and the beam comes on.</p>
         </article>
       </main>
     </div>

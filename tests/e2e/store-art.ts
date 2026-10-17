@@ -25,9 +25,9 @@ export async function brandCss(): Promise<string> {
     body { font-family: Atkinson, system-ui, sans-serif; color: #F4F6FC; -webkit-font-smoothing: antialiased; }
     .night { position: absolute; inset: 0;
       background: radial-gradient(120% 140% at 0% 0%, #1F2C55 0%, #121A33 45%, ${NIGHT} 100%); }
-    /* The brand's "find" palette: the current match, orange in a yellow frame. */
-    mark { background: #FF8C00; color: #0B1020; border-radius: 0.18em; padding: 0 0.14em;
-      box-shadow: 0 0 0 0.07em #FFFF00, 0 0 0 0.11em #000; }
+    /* The brand's "find" palette: the current match, Night lit in Beam, in a Signal frame. */
+    mark { background: #0B1020; color: #FFD60A; border-radius: 0.18em; padding: 0 0.14em;
+      box-shadow: 0 0 0 0.08em #FF8A00, 0 0 0 0.12em #000; }
   `;
 }
 

@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Copy, Pencil, RotateCcw, Trash2 } from 'lucide-react';
+import { Copy, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,9 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { NativeSelect, NativeSelectOptGroup, NativeSelectOption } from '@/components/ui/native-select';
 import type { SettingsApi } from '@/hooks/use-settings';
-import { MAX_PROFILES } from '@/lib/settings/defaults';
+import { DEFAULT_APPEARANCE, MAX_PROFILES } from '@/lib/settings/defaults';
 import { NAME_MAX } from '@/lib/settings/sanitize';
-import { isChangedBuiltIn } from '@/lib/settings/schema';
+import { isChangedBuiltIn, sameAppearance } from '@/lib/settings/schema';
 
 /**
  * Pick, duplicate, rename and delete profiles, and reset a built-in one the user changed.
@@ -27,7 +27,8 @@ import { isChangedBuiltIn } from '@/lib/settings/schema';
  */
 export function ProfilePicker({ api, compact = false }: { api: SettingsApi; compact?: boolean }) {
   const id = useId();
-  const [renaming, setRenaming] = useState(false);
+  /** The profile being renamed: the active one, or one just created (before the page catches up). */
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
   const renameRef = useRef<HTMLInputElement>(null);
@@ -40,18 +41,31 @@ export function ProfilePicker({ api, compact = false }: { api: SettingsApi; comp
   const builtIns = state.profiles.filter((p) => p.builtIn);
   const active = state.active;
 
+  const roomForOne = () => {
+    if (users.length < MAX_PROFILES) return true;
+    setMessage(`You can have up to ${MAX_PROFILES} profiles. Delete one to make room for another.`);
+    return false;
+  };
+
   const duplicate = () => {
-    if (users.length >= MAX_PROFILES) {
-      setMessage(`You can have up to ${MAX_PROFILES} profiles. Delete one to make room for another.`);
-    } else {
-      setMessage('');
-      void api.duplicateProfile();
-    }
+    if (!roomForOne()) return;
+    setMessage('');
+    void api.duplicateProfile();
+  };
+
+  /** A profile from scratch: the default style, named straight away. */
+  const create = async () => {
+    if (!roomForOne()) return;
+    setMessage('');
+    const created = await api.createProfile();
+    if (!created) return;
+    setName(created.name);
+    setRenaming(created.id);
   };
 
   const finishRename = (save: boolean) => {
-    if (save && name.trim()) void api.renameProfile(active.id, name);
-    setRenaming(false);
+    if (save && name.trim() && renaming) void api.renameProfile(renaming, name);
+    setRenaming(null);
   };
 
   if (renaming) {
@@ -113,6 +127,12 @@ export function ProfilePicker({ api, compact = false }: { api: SettingsApi; comp
             </NativeSelectOptGroup>
           </NativeSelect>
         </div>
+        {!compact && (
+          <Button variant="outline" onClick={() => void create()} title="Start a profile from the default style">
+            <Plus aria-hidden />
+            New profile
+          </Button>
+        )}
         <Button variant="outline" onClick={duplicate} title="Make a copy of this profile">
           <Copy aria-hidden />
           Duplicate
@@ -123,13 +143,19 @@ export function ProfilePicker({ api, compact = false }: { api: SettingsApi; comp
             Reset to original
           </Button>
         )}
+        {!compact && !active.builtIn && !sameAppearance(active.appearance, DEFAULT_APPEARANCE) && (
+          <Button variant="outline" onClick={() => void api.resetProfile(active.id)}>
+            <RotateCcw aria-hidden />
+            Reset to the default style
+          </Button>
+        )}
         {!compact && !active.builtIn && (
           <>
             <Button
               variant="outline"
               onClick={() => {
                 setName(active.name);
-                setRenaming(true);
+                setRenaming(active.id);
               }}
             >
               <Pencil aria-hidden />
@@ -167,10 +193,13 @@ export function ProfilePicker({ api, compact = false }: { api: SettingsApi; comp
         {message}
       </p>
       {!compact && active.builtIn && (
-        <p className="mt-2 text-sm text-muted-foreground">
-          This profile comes with Accessible Find. Your changes to it are saved, and you can always reset it to the
-          original.
-        </p>
+        <div className="mt-2 max-w-prose space-y-1 text-sm">
+          {active.description && <p>{active.description}</p>}
+          <p className="text-muted-foreground">
+            This profile comes with Accessible Find. Your changes to it are saved, and you can always reset it to the
+            original.
+          </p>
+        </div>
       )}
     </div>
   );

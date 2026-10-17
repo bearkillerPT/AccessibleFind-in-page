@@ -144,13 +144,17 @@ export function sentenceText(text: string, span: Span, maxChars = 200): string {
     if (SENTENCE_END.test(c) && text[start] === ' ') break;
     start--;
   }
+  const endsHere = (at: number) =>
+    SENTENCE_END.test(text[at - 1] ?? '') && (at >= text.length || text[at] === ' ' || text[at] === '\n');
   let end = span.end;
   const maxEnd = Math.min(text.length, span.end + maxChars);
+  // A match that ends its sentence (a whole sentence searched for) reads no further.
+  if (end > span.start && endsHere(end)) return text.slice(start, end).trim();
   while (end < maxEnd) {
     const c = text[end]!;
     if (c === '\n') break;
     end++;
-    if (SENTENCE_END.test(c) && (end >= text.length || text[end] === ' ' || text[end] === '\n')) break;
+    if (endsHere(end)) break;
   }
   return text.slice(start, end).trim();
 }

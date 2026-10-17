@@ -1,5 +1,5 @@
 import { sanitizeShortcuts } from '../shortcuts';
-import { BAR_POSITIONS, DEFAULT_APPEARANCE, DEFAULT_PREFS } from './defaults';
+import { BAR_POSITIONS, DEFAULT_APPEARANCE, DEFAULT_PREFS, ringWidthFor } from './defaults';
 import type { Appearance, BarPosition, MotionPref, Prefs, ThemePref } from './types';
 
 /**
@@ -12,6 +12,8 @@ export const LIMITS = {
   blinkCount: { min: 1, max: 10 },
   blinkIntervalMs: { min: 200, max: 2000 },
   spotlightOpacity: { min: 0.1, max: 0.9 },
+  pingDurationMs: { min: 300, max: 3000 },
+  pingWidth: { min: 2, max: 16 },
   magnifierFontSize: { min: 16, max: 120 },
   uiScale: { min: 1, max: 3 },
   speechRate: { min: 0.5, max: 2 },
@@ -59,6 +61,8 @@ export function sanitizeAppearance(input: unknown, base: Appearance = DEFAULT_AP
   const ping = sub(a.ping);
   const guides = sub(a.guides);
   const magnifier = sub(a.magnifier);
+  const dark = sub(a.dark);
+  const borderWidth = num(a.borderWidth, d.borderWidth, LIMITS.borderWidth);
   return {
     matchBg: color(a.matchBg, d.matchBg),
     matchText: color(a.matchText, d.matchText),
@@ -69,7 +73,7 @@ export function sanitizeAppearance(input: unknown, base: Appearance = DEFAULT_AP
     currentBg: color(a.currentBg, d.currentBg),
     currentText: color(a.currentText, d.currentText),
     currentBorder: color(a.currentBorder, d.currentBorder),
-    borderWidth: num(a.borderWidth, d.borderWidth, LIMITS.borderWidth),
+    borderWidth,
     contextWords: num(a.contextWords, d.contextWords, LIMITS.contextWords),
     blink: {
       enabled: bool(blink.enabled, d.blink.enabled),
@@ -80,11 +84,24 @@ export function sanitizeAppearance(input: unknown, base: Appearance = DEFAULT_AP
       enabled: bool(spotlight.enabled, d.spotlight.enabled),
       opacity: num(spotlight.opacity, d.spotlight.opacity, LIMITS.spotlightOpacity, false),
     },
-    ping: { enabled: bool(ping.enabled, d.ping.enabled) },
+    ping: {
+      enabled: bool(ping.enabled, d.ping.enabled),
+      durationMs: num(ping.durationMs, d.ping.durationMs, LIMITS.pingDurationMs),
+      // Profiles saved before it was a setting keep the thickness they had.
+      width: num(ping.width, ringWidthFor(borderWidth), LIMITS.pingWidth),
+    },
     guides: { enabled: bool(guides.enabled, d.guides.enabled) },
     magnifier: {
       enabled: bool(magnifier.enabled, d.magnifier.enabled),
       fontSize: num(magnifier.fontSize, d.magnifier.fontSize, LIMITS.magnifierFontSize),
+    },
+    dark: {
+      matchBg: color(dark.matchBg, d.dark.matchBg),
+      matchText: color(dark.matchText, d.dark.matchText),
+      underline: color(dark.underline, d.dark.underline),
+      currentBg: color(dark.currentBg, d.dark.currentBg),
+      currentText: color(dark.currentText, d.dark.currentText),
+      currentBorder: color(dark.currentBorder, d.dark.currentBorder),
     },
   };
 }
@@ -100,7 +117,6 @@ export function sanitizePrefs(input: unknown): Prefs {
   const theme: ThemePref = p.theme === 'dark' || p.theme === 'light' ? p.theme : 'system';
   const speech = sub(p.speech);
   const auto = sub(p.autoProfile);
-  const id = (v: unknown, fallback: string) => (typeof v === 'string' && v ? v.slice(0, 64) : fallback);
   // Fields added after v2.0 are filled in with defaults here, so they need no migration.
   return {
     uiScale: num(p.uiScale, d.uiScale, LIMITS.uiScale, false),
@@ -119,11 +135,9 @@ export function sanitizePrefs(input: unknown): Prefs {
       rate: num(speech.rate, d.speech.rate, LIMITS.speechRate, false),
       voiceURI: typeof speech.voiceURI === 'string' ? speech.voiceURI.slice(0, 300) : d.speech.voiceURI,
     },
-    // v2 previews also stored a profile for light pages (`light`); those now use the active one.
-    autoProfile: {
-      enabled: bool(auto.enabled, d.autoProfile.enabled),
-      dark: id(auto.dark, d.autoProfile.dark),
-    },
+    // v2 previews also stored profiles to take colors from (`light`, `dark`); each profile
+    // now has its own colors for dark backgrounds.
+    autoProfile: { enabled: bool(auto.enabled, d.autoProfile.enabled) },
     rememberSearches: bool(p.rememberSearches, d.rememberSearches),
     shortcuts: sanitizeShortcuts(p.shortcuts),
   };

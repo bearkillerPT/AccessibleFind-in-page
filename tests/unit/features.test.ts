@@ -3,12 +3,11 @@ import { freeArea } from '../../src/lib/finder/geometry';
 import { placesFor } from '../../src/lib/finder/overlay';
 import { luminance, parseColor, textTone } from '../../src/lib/finder/tone';
 import { addToHistory } from '../../src/lib/history';
-import { BUILT_IN_PROFILES } from '../../src/lib/settings/defaults';
+import { BUILT_IN_PROFILES, DEFAULT_APPEARANCE } from '../../src/lib/settings/defaults';
 import { LIMITS, sanitizePrefs } from '../../src/lib/settings/sanitize';
 import {
   appearanceForPage,
   appearanceFromV1,
-  colorProfileForPage,
   migrateV1,
   profileKey,
   stateFromRaw,
@@ -90,7 +89,7 @@ describe('new preferences', () => {
   it('fills in defaults for settings saved before they existed', () => {
     const prefs = sanitizePrefs({ uiScale: 1.5 });
     expect(prefs.speech).toEqual({ autoRead: false, rate: 1, voiceURI: '' });
-    expect(prefs.autoProfile).toEqual({ enabled: true, dark: 'sys-hc-dark' });
+    expect(prefs.autoProfile).toEqual({ enabled: true });
     expect(prefs.rememberSearches).toBe(true);
   });
 
@@ -98,27 +97,30 @@ describe('new preferences', () => {
     expect(sanitizePrefs({ speech: { rate: 9 } }).speech.rate).toBe(LIMITS.speechRate.max);
   });
 
-  it('falls back when the profile for dark pages was deleted', () => {
+  it('ignores the profiles early v2 builds picked for light and dark pages', () => {
+    const state = stateFromRaw({ schemaVersion: 2, prefs: { autoProfile: { enabled: false, light: 'a', dark: 'gone' } } });
+    expect(state.prefs.autoProfile).toEqual({ enabled: false });
+  });
+
+  it('gives profiles saved before they had colors for dark backgrounds the default ones', () => {
     const state = stateFromRaw({
       schemaVersion: 2,
       profileOrder: ['a'],
-      [profileKey('a')]: { id: 'a', name: 'A', appearance: {} },
+      [profileKey('a')]: { id: 'a', name: 'A', appearance: { matchBg: '#123456' } },
       activeProfileId: 'a',
-      // Early v2 builds also stored a profile for light pages; light pages now use the active one.
-      prefs: { autoProfile: { enabled: true, light: 'a', dark: 'gone' } },
     });
-    expect(state.prefs.autoProfile).toEqual({ enabled: true, dark: 'sys-hc-dark' });
+    expect(state.active.appearance.dark).toEqual(DEFAULT_APPEARANCE.dark);
   });
 
-  it('on light pages, automatic style keeps the colors of the profile the user picked', () => {
+  it('automatic style uses the profile’s own colors for dark backgrounds, and only on them', () => {
     const state = stateFromRaw({ schemaVersion: 2, activeProfileId: 'sys-colorblind' });
     expect(state.prefs.autoProfile.enabled).toBe(true);
-    expect(colorProfileForPage(state, 'light').id).toBe('sys-colorblind');
-    expect(colorProfileForPage(state, null).id).toBe('sys-colorblind');
-    expect(colorProfileForPage(state, 'dark').id).toBe('sys-hc-dark');
+    expect(appearanceForPage(state, 'light')).toEqual(state.active.appearance);
+    expect(appearanceForPage(state, null)).toEqual(state.active.appearance);
+    expect(appearanceForPage(state, 'dark').matchBg).toBe(state.active.appearance.dark.matchBg);
   });
 
-  it('automatic style only takes the colors; the other options stay the active profile’s', () => {
+  it('automatic style only swaps the colors; the other options stay', () => {
     const state = stateFromRaw({
       schemaVersion: 2,
       profileOrder: ['a'],
@@ -131,27 +133,23 @@ describe('new preferences', () => {
           spotlight: { enabled: false, opacity: 0.3 },
           underline: { enabled: false, color: '#abcdef' },
           blink: { enabled: false, count: 5, intervalMs: 600 },
+          dark: { matchBg: '#654321', currentBorder: '#abcabc', underline: '#111111' },
         },
       },
       activeProfileId: 'a',
-      prefs: { autoProfile: { enabled: true, dark: 'sys-hc-dark' } },
     });
-    const hcDark = BUILT_IN_PROFILES.find((p) => p.id === 'sys-hc-dark')!.appearance;
-
-    expect(colorProfileForPage(state, 'dark').id).toBe('sys-hc-dark');
     const dark = appearanceForPage(state, 'dark');
-    // Colors from the dark-page profile...
-    expect(dark.matchBg).toBe(hcDark.matchBg);
-    expect(dark.currentBorder).toBe(hcDark.currentBorder);
-    expect(dark.underline.color).toBe(hcDark.underline.color);
+    // Its colors for dark backgrounds...
+    expect(dark.matchBg).toBe('#654321');
+    expect(dark.currentBorder).toBe('#abcabc');
+    expect(dark.underline.color).toBe('#111111');
     // ...everything else unchanged.
     expect(dark.borderWidth).toBe(7);
     expect(dark.spotlight).toEqual({ enabled: false, opacity: 0.3 });
     expect(dark.underline.enabled).toBe(false);
     expect(dark.blink).toEqual({ enabled: false, count: 5, intervalMs: 600 });
 
-    expect(appearanceForPage(state, 'light')).toEqual(state.active.appearance);
-    const off = { ...state, prefs: { ...state.prefs, autoProfile: { ...state.prefs.autoProfile, enabled: false } } };
+    const off = { ...state, prefs: { ...state.prefs, autoProfile: { enabled: false } } };
     expect(appearanceForPage(off, 'dark')).toEqual(state.active.appearance);
   });
 });
@@ -159,9 +157,11 @@ describe('new preferences', () => {
 describe('defaults', () => {
   it('start with the spotlight and magnifier off, which change how the page looks', () => {
     const state = stateFromRaw({});
+    // Built-in profiles too: effects are personal, and one tap away in the find bar.
     for (const profile of state.profiles) {
-      expect(profile.appearance.spotlight.enabled).toBe(false);
-      expect(profile.appearance.magnifier.enabled).toBe(false);
+      expect(profile.appearance.spotlight.enabled, profile.id).toBe(false);
+      expect(profile.appearance.guides.enabled, profile.id).toBe(false);
+      expect(profile.appearance.magnifier.enabled, profile.id).toBe(false);
     }
     expect(state.prefs.autoProfile.enabled).toBe(true);
   });

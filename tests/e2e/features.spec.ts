@@ -116,6 +116,68 @@ test('with no match, read aloud reads the selected text, or says that nothing wa
   await expect.poll(() => spoken(sw)).toEqual(['Far below', 'No results for “zebra”.']);
 });
 
+test('the ring is as slow and as thick as the profile says', async ({ page, sw }) => {
+  await sw.evaluate(() =>
+    chrome.storage.sync.set({
+      profileOrder: ['default'],
+      activeProfileId: 'default',
+      'profile:default': {
+        id: 'default',
+        name: 'Default',
+        appearance: { ping: { enabled: true, durationMs: 1600, width: 7 } },
+      },
+    }),
+  );
+  await goto(page, 'basic.html');
+  // The ring is in the overlay's closed shadow root, out of the page's reach; DevTools sees every animation.
+  const cdp = await page.context().newCDPSession(page);
+  const durations: number[] = [];
+  cdp.on('Animation.animationStarted', (e) => durations.push(e.animation.source?.duration ?? 0));
+  await cdp.send('Animation.enable');
+  await openViaCommand(sw, page);
+  const bar = await findBar(page);
+  await search(bar, 'lighthouse');
+  await input(bar).press('Enter');
+  await expect.poll(() => durations).toContain(1600);
+  // DevTools also reaches into the closed shadow root for the ring's style.
+  type DomNode = { attributes?: string[]; children?: DomNode[]; shadowRoots?: DomNode[] };
+  const { root } = (await cdp.send('DOM.getDocument', { depth: -1, pierce: true })) as { root: DomNode };
+  const attr = (n: DomNode, name: string) => n.attributes?.[n.attributes.indexOf(name) + 1] ?? '';
+  const find = (n: DomNode): DomNode | undefined =>
+    attr(n, 'class').split(' ').includes('ping')
+      ? n
+      : [...(n.children ?? []), ...(n.shadowRoots ?? [])].map(find).find(Boolean);
+  expect(attr(find(root)!, 'style')).toContain('border-width: 7px');
+});
+
+test('a whole sentence searched for is read alone, not with the sentence after it', async ({ page, sw }) => {
+  await goto(page, 'basic.html');
+  await openViaCommand(sw, page);
+  const bar = await findBar(page);
+  const sentence = await page.evaluate(() => {
+    const text = document.querySelector('p')!.textContent!;
+    return text.slice(0, text.search(/[.!?] /) + 1);
+  });
+  await search(bar, sentence);
+  await expect(status(bar)).toHaveText(/^1 of/);
+  await input(bar).press('Alt+r');
+  await expect.poll(() => spoken(sw)).toEqual([sentence]);
+});
+
+test('text pasted into the find bar to be heard is read as it is, not as a search with no results', async ({ page, sw }) => {
+  await goto(page, 'basic.html');
+  await openViaCommand(sw, page);
+  const bar = await findBar(page);
+  const pasted = 'Bring a warm jacket: the wind at the cape is strong, even in summer.';
+  // Even over text selected on the page, as when the bar was opened with Ctrl+F on a selection.
+  await select(page, 'Far below');
+  await input(bar).focus();
+  await page.keyboard.insertText(pasted);
+  await expect(status(bar)).toHaveText('No results');
+  await input(bar).press('Alt+r');
+  await expect.poll(() => spoken(sw)).toEqual([pasted]);
+});
+
 test('the read aloud shortcut is Alt+R, a browser shortcut, so websites can’t take the key', async ({ sw }) => {
   // On Windows and Linux, a page's access keys fire on Alt+letter even when a script cancels
   // the key press: Alt+R caught in the page also opened "Recent changes" on Wikipedia.
@@ -192,16 +254,16 @@ test('automatic style, on from the start, changes only the colors on dark pages'
   let bar = await findBar(page);
   await search(bar, 'needle');
   await expect(status(bar)).toHaveText(/of 2$/);
-  // Colors of "High contrast (dark pages)": white matches, and a cyan current one. The user's
+  // The profile's colors for dark backgrounds: amber matches, and a white current one. The user's
   // "no underline" stays.
   await expect
     .poll(() => highlightCss(page))
-    .toContain('highlight(accessible-find-match-dark) { background-color: rgb(255, 255, 255); color: rgb(0, 0, 0); text-decoration: none;');
-  expect(await highlightCss(page)).toContain('highlight(accessible-find-current-dark) { background-color: rgb(0, 255, 255);');
+    .toContain('highlight(accessible-find-match-dark) { background-color: rgb(198, 139, 0); color: rgb(0, 0, 0); text-decoration: none;');
+  expect(await highlightCss(page)).toContain('highlight(accessible-find-current-dark) { background-color: rgb(255, 255, 255);');
   expect(await page.evaluate(() => CSS.highlights.get('accessible-find-match-dark')?.size)).toBe(2);
   // The profile picker and the switches stay available, showing the user's own options.
   await bar.getByRole('button', { name: 'Quick settings' }).click();
-  await expect(bar.getByText('so matches use the colors of “High contrast (dark pages)”')).toBeVisible();
+  await expect(bar.getByText('This page looks dark, so matches use colors made for dark backgrounds.')).toBeVisible();
   await expect(bar.getByRole('combobox', { name: 'Profile' })).toHaveValue('default');
   await expect(bar.getByRole('switch', { name: 'Magnifier' })).toBeChecked();
   await expect(bar.getByRole('switch', { name: 'Spotlight' })).not.toBeChecked();
@@ -214,7 +276,7 @@ test('automatic style, on from the start, changes only the colors on dark pages'
   await search(bar, 'beam');
   await expect(status(bar)).toHaveText('1 of 1');
   // On a light page, the profile's own yellow.
-  await expect.poll(() => highlightCss(page)).toContain('highlight(accessible-find-match) { background-color: rgb(255, 255, 0)');
+  await expect.poll(() => highlightCss(page)).toContain('highlight(accessible-find-match) { background-color: rgb(255, 214, 10)');
 });
 
 test('automatic style colors each match for the background it’s on', async ({ page, sw }) => {
@@ -234,8 +296,8 @@ test('automatic style colors each match for the background it’s on', async ({ 
   // dark picture in the colors for dark backgrounds.
   await expect.poll(sizes).toMatchObject({ match: 1, 'match-dark': 2 });
   const css = await highlightCss(page);
-  expect(css).toContain('highlight(accessible-find-match) { background-color: rgb(255, 255, 0)');
-  expect(css).toContain('highlight(accessible-find-match-dark) { background-color: rgb(255, 255, 255)');
+  expect(css).toContain('highlight(accessible-find-match) { background-color: rgb(255, 214, 10)');
+  expect(css).toContain('highlight(accessible-find-match-dark) { background-color: rgb(198, 139, 0)');
   // The current match goes wherever it is, one at a time.
   const where = async () => {
     const s = await sizes();
@@ -255,7 +317,7 @@ test('automatic style colors each match for the background it’s on', async ({ 
   await bar.getByRole('switch', { name: 'Automatic style' }).click();
   await expect
     .poll(() => highlightCss(page))
-    .toContain('highlight(accessible-find-match-dark) { background-color: rgb(255, 255, 0)');
+    .toContain('highlight(accessible-find-match-dark) { background-color: rgb(255, 214, 10)');
 });
 
 test('quick settings show an example of each effect, inside the find bar', async ({ page, sw }) => {
@@ -292,10 +354,10 @@ test('the practice page works with Ctrl+F and the toolbar button, and searches o
   await expect(page.getByLabel('Alt+Shift+F')).toBeVisible();
   await page.keyboard.press('Control+f');
   let bar = await findBar(page);
-  await search(bar, 'mountain');
+  await search(bar, 'lighthouse');
   // Six in the article; the instructions mention it too but aren't searched.
   await expect(status(bar)).toHaveText(/of 6$/);
-  await search(bar, 'estancia');
+  await search(bar, 'camoes');
   await expect(status(bar)).toHaveText('1 of 1');
   await search(bar, "visitor's postcard");
   await expect(status(bar)).toHaveText('1 of 1');
@@ -304,9 +366,9 @@ test('the practice page works with Ctrl+F and the toolbar button, and searches o
   await expect(page.locator('accessible-find-overlay')).toHaveCount(0);
 
   // Reading aloud works here too, with the find bar closed.
-  await select(page, 'the granite turns gold');
+  await select(page, 'the cliffs turn gold');
   await readViaCommand(sw);
-  await expect.poll(() => spoken(sw)).toEqual(['the granite turns gold']);
+  await expect.poll(() => spoken(sw)).toEqual(['the cliffs turn gold']);
 
   // The toolbar button and keyboard shortcut go through the background.
   await openActiveViaCommand(sw);

@@ -20,17 +20,17 @@ I made it because I have retinitis pigmentosa, which narrows my field of view. I
 
 HIGHLIGHTS YOU CAN SEE
 • Your own colors for every match and for the current one, with an underline and a border, so color isn't the only cue.
-• Built-in high-contrast and colour-blind-friendly profiles, or make your own. A contrast check tells you when text would be hard to read.
-• Automatic style: matches on a dark background, on a dark website or in a code block, switch to colors that stand out there.
+• Profiles for your eyes: cataracts, light sensitivity, and red-green, blue-yellow or no color vision. Or make your own; a contrast check tells you when text would be hard to read.
+• Automatic style: matches on a dark background, on a dark website or in a code block, switch to colors made for dark backgrounds.
 
 FIND THE CURRENT MATCH QUICKLY
-• Matches blink briefly and a ring closes in on the current one. Both can be turned off, and they follow your system's reduce motion setting.
-• Turn on a spotlight that dims the rest of the page, guide lines that cross at the match, or a magnifier that repeats it in large text right beside it.
+• Matches blink briefly and a ring closes in on the current one, as slowly and as thick as you like. Both can be turned off, and they follow your system's reduce motion setting.
+• Turn on a spotlight that dims the rest of the page, guide lines that reach a narrow field of view, or a magnifier that repeats the match in large text right beside it, for when the middle of your sight is missing.
 • The find bar steps aside if it would cover the match.
 
 READ, DON'T HUNT
 • A list of every match with the words around it, in large text. Move through it with the arrow keys and the page follows.
-• Read aloud: hear the sentence around the match, or have each match read as you move to it. Select text on any page and press Alt+R to hear it, even with the find bar closed.
+• Read aloud: hear the sentence around the match, or have each match read as you move to it. Paste any text into the find bar to hear it too. Select text on any page and press your read aloud shortcut to hear it, even with the find bar closed. Set it once on Chrome's extension shortcuts page (the settings take you there).
 
 A FIND BAR BUILT FOR LOW VISION
 • Text size from 100% to 300%, light and dark themes, and six places on the screen.
@@ -49,7 +49,7 @@ PRIVATE BY DESIGN
 Accessible Find reads a page only when you search it, on your device. There are no accounts, ads or analytics, and nothing is sent to the developer. Recent searches stay on this device, and you can turn them off.
 
 WHERE IT CAN'T RUN
-Browsers don't let any extension run on their own pages (settings, the new tab page), on the Chrome Web Store, or in the built-in PDF viewer. With Ctrl+F on every website turned on, those pages get the browser's own find instead. Text inside embedded frames and form fields isn't searched yet.
+Browsers don't let any extension run on their own pages (settings, the new tab page), on the Chrome Web Store, or in the built-in PDF viewer. With Ctrl+F on every website turned on, those pages get the browser's own find instead; otherwise Accessible Find tells you why, and how to open the browser's own find. Text inside embedded frames and form fields isn't searched yet.
 
 Free and open source. Ideas and bug reports are welcome on GitHub: https://github.com/bearkillerPT/AccessibleFind-in-page
 ```
@@ -93,14 +93,8 @@ Accessible Find replaces the browser's find in page with one designed for people
 
 **Data usage:** tick none of the data types: nothing is collected, since nothing the extension handles ever leaves the device. Then tick all three certifications (not sold, not used for unrelated purposes, not used for creditworthiness). The listing then says the developer "will not collect or use your data". Google also asks for data that's only handled on the device to be explained ([User Data FAQ](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq)): the privacy policy below does that (it reads pages to search them, and keeps settings and recent searches in the browser).
 
-**Privacy policy URL:** https://github.com/bearkillerPT/AccessibleFind-in-page/blob/main/PRIVACY.md (once this branch is merged into `main`).
+**Privacy policy URL:** https://github.com/bearkillerPT/AccessibleFind-in-page/blob/main/PRIVACY.md
 
 ## Account
 
-The listing shows the publisher name **"leagueoflegendsfeeds"** under "Offered by". To show **BearkillerPT** instead:
-
-1. Open the [Developer Dashboard](https://chrome.google.com/webstore/devconsole) and choose **Account** in the left menu.
-2. Change **Publisher name** to `BearkillerPT`.
-3. Click **Save changes** at the bottom of the page.
-
-It applies to all your listings.
+The publisher name under "Offered by" is **BearkillerPT**. It's set on the dashboard's **Account** page (**Publisher name**), for all your listings.

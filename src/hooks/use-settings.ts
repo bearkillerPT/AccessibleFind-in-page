@@ -175,6 +175,20 @@ export function useSettings() {
     return now(() => store.createProfile(name, s.active.appearance));
   }, [now]);
 
+  /** Starts a profile from the default style and makes it active. Gives back its id and name. */
+  const createProfile = useCallback(async () => {
+    const s = stateRef.current;
+    if (!s) return null;
+    const names = new Set(s.profiles.map((p) => p.name));
+    let name = 'New profile';
+    for (let i = 2; names.has(name); i++) name = `New profile ${i}`;
+    const created = { id: null as string | null };
+    await now(async () => {
+      created.id = await store.createProfile(name, structuredClone(DEFAULT_APPEARANCE));
+    });
+    return created.id ? { id: created.id, name } : null;
+  }, [now]);
+
   const renameProfile = useCallback((id: string, name: string) => now(() => store.renameProfile(id, name)), [now]);
   const deleteProfile = useCallback((id: string) => now(() => store.deleteProfile(id)), [now]);
 
@@ -186,6 +200,7 @@ export function useSettings() {
     updatePrefs,
     selectProfile,
     duplicateProfile,
+    createProfile,
     renameProfile,
     deleteProfile,
   };

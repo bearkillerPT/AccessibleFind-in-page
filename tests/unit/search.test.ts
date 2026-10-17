@@ -245,6 +245,14 @@ describe('sentence', () => {
     expect(positionOf(idx, document.body, 0)).toBe(-1);
   });
 
+  it('stops at the end of a match that ends its sentence, like a whole sentence searched for', () => {
+    const idx = index('<p>Visitors ask why it sits back. The answer is erosion.</p>');
+    const [whole] = find(idx, 'Visitors ask why it sits back.');
+    expect(sentenceText(idx.text, whole!)).toBe('Visitors ask why it sits back.');
+    const [last] = find(idx, 'erosion.');
+    expect(sentenceText(idx.text, last!)).toBe('The answer is erosion.');
+  });
+
   it('caps very long sentences', () => {
     const idx = index(`<p>${'word '.repeat(200)}needle ${'word '.repeat(200)}</p>`);
     const [span] = find(idx, 'needle');

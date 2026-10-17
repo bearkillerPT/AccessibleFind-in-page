@@ -1,10 +1,8 @@
 import type { ReactNode } from 'react';
-import { CircleCheck, TriangleAlert } from 'lucide-react';
 import { EffectExample, type ExampleKind } from '@/components/preview';
-import { ColorField, RangeField, SwitchField } from '@/components/settings-fields';
+import { RangeField, SwitchField } from '@/components/settings-fields';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FieldGroup, FieldSeparator } from '@/components/ui/field';
-import { contrastRatio, MIN_TEXT_CONTRAST } from '@/lib/settings/contrast';
 import { LIMITS } from '@/lib/settings/sanitize';
 import type { Appearance } from '@/lib/settings/types';
 
@@ -22,27 +20,12 @@ function Group(props: { title: string; description?: string; children: ReactNode
   );
 }
 
-function ContrastNote({ bg, fg }: { bg: string; fg: string }) {
-  const ratio = contrastRatio(bg, fg);
-  if (ratio === null) return null;
-  const ok = ratio >= MIN_TEXT_CONTRAST;
-  const Icon = ok ? CircleCheck : TriangleAlert;
-  return (
-    <p className={`flex items-start gap-2 text-sm ${ok ? 'text-muted-foreground' : 'font-semibold text-warning-foreground'}`}>
-      <Icon className={`mt-0.5 size-4 shrink-0 ${ok ? 'text-success' : ''}`} aria-hidden />
-      <span>
-        Text contrast {ratio.toFixed(1)}:1.{' '}
-        {ok ? 'Easy to read.' : `Below the recommended ${MIN_TEXT_CONTRAST}:1, so it may be hard to read.`}
-      </span>
-    </p>
-  );
-}
-
 /**
- * Every visual setting of a profile, grouped into cards. Options of an effect show while
- * it's on, and hovering an effect shows an example of it.
+ * How a profile marks matches and helps find the current one; its colors are edited with the
+ * light and dark previews. Options of an effect show while it's on, and each effect's help
+ * button shows an example of it.
  */
-export function AppearanceEditor(props: {
+export function EffectsEditor(props: {
   appearance: Appearance;
   onChange: (next: Appearance) => void;
   /** No blinking or moving examples. */
@@ -56,47 +39,26 @@ export function AppearanceEditor(props: {
 
   return (
     <div className="grid gap-4 @2xl:grid-cols-2">
-      <Group title="All matches" description="Every place the text appears.">
-        <ColorField label="Background" value={a.matchBg} onChange={(matchBg) => set({ matchBg })} />
-        <ColorField label="Text" value={a.matchText} onChange={(matchText) => set({ matchText })} />
-        <ContrastNote bg={a.matchBg} fg={a.matchText} />
-        <FieldSeparator />
+      <Group
+        title="Underline, border and blinking"
+        description="Cues that don’t rely on color, and blinking to catch your eye."
+      >
         <SwitchField
           label="Underline"
-          description="A second cue that doesn’t rely on color."
+          description="Every match is underlined, in the colors above."
           example={example('underline')}
           checked={a.underline.enabled}
           onCheckedChange={(enabled) => set({ underline: { ...a.underline, enabled } })}
         />
-        {a.underline.enabled && (
-          <ColorField
-            label="Underline color"
-            value={a.underline.color}
-            onChange={(color) => set({ underline: { ...a.underline, color } })}
-          />
-        )}
-      </Group>
-
-      <Group title="Current match" description="The one you’re on, with a border around it.">
-        <ColorField label="Background" value={a.currentBg} onChange={(currentBg) => set({ currentBg })} />
-        <ColorField label="Text" value={a.currentText} onChange={(currentText) => set({ currentText })} />
-        <ContrastNote bg={a.currentBg} fg={a.currentText} />
-        <FieldSeparator />
-        <ColorField
-          label="Border"
-          value={a.currentBorder}
-          onChange={(currentBorder) => set({ currentBorder })}
-        />
         <RangeField
           label="Border width"
+          description="Around the current match."
           value={a.borderWidth}
           {...LIMITS.borderWidth}
           format={(v) => `${v} px`}
           onChange={(borderWidth) => set({ borderWidth })}
         />
-      </Group>
-
-      <Group title="Blinking" description="Matches and the words around them take turns lighting up.">
+        <FieldSeparator />
         <SwitchField
           label="Blink"
           description="After you stop typing, and when you move to another match."
@@ -156,8 +118,28 @@ export function AppearanceEditor(props: {
           description="A ring shrinks from the edges of the screen onto the match."
           example={example('ring')}
           checked={a.ping.enabled}
-          onCheckedChange={(enabled) => set({ ping: { enabled } })}
+          onCheckedChange={(enabled) => set({ ping: { ...a.ping, enabled } })}
         />
+        {a.ping.enabled && (
+          <RangeField
+            label="Ring duration"
+            description="How long it takes to close in. Slower is easier to follow."
+            value={a.ping.durationMs}
+            {...LIMITS.pingDurationMs}
+            step={50}
+            format={(v) => `${(v / 1000).toLocaleString(undefined, { maximumFractionDigits: 2 })} s`}
+            onChange={(durationMs) => set({ ping: { ...a.ping, durationMs } })}
+          />
+        )}
+        {a.ping.enabled && (
+          <RangeField
+            label="Ring thickness"
+            value={a.ping.width}
+            {...LIMITS.pingWidth}
+            format={(v) => `${v} px`}
+            onChange={(width) => set({ ping: { ...a.ping, width } })}
+          />
+        )}
         <SwitchField
           label="Guide lines"
           description="Lines across the whole screen that cross at the match."

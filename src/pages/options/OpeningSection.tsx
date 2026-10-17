@@ -57,7 +57,8 @@ export function OpeningSection() {
               <AlertTitle>Your keyboard shortcut is still {ctrlF}</AlertTitle>
               <AlertDescription className="text-warning-foreground">
                 <p>
-                  The shortcut takes priority, so on protected pages you’ll get a message instead of the browser’s find.
+                  The shortcut takes priority, so on pages Accessible Find can’t run on, the browser’s own find only
+                  opens on the second press.
                   Change it to another key, like Alt+Shift+F, or remove it.
                 </p>
                 <Button variant="outline" className="mt-2" onClick={() => openBrowserPage(shortcutsUrl())}>

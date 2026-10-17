@@ -51,7 +51,7 @@ The full light and dark palettes are the CSS variables in `src/styles/globals.cs
 2. **Focus you can't miss.** A 3 px solid ring in the ring color with a 2 px offset. Never remove focus styles.
 3. **Never color alone.** Matches are underlined as well as colored, the current match has a border, and toggles show a filled state *and* `aria-pressed`.
 4. **Big targets.** Controls are at least 40 px at the default text size.
-5. **Calm motion.** Blinking stays under 3 flashes a second (WCAG 2.3.1), and all animation stops when the OS asks for reduced motion.
+5. **Calm motion.** Blinking stays under 3 flashes a second (WCAG 2.3.1), and all animation stops when the OS asks for reduced motion, or when the user turns off **Blinking and animation**. How many times matches blink, how fast, and how slow and thick the ring is are the user's to set.
 6. **Dark first.** The find bar was designed around the dark theme (less glare for light-sensitive eyes); the light theme is fully supported.
 7. **Real semantics.** Headings are headings, labels are labels, live regions announce match counts.
 
@@ -72,17 +72,27 @@ After `npx shadcn add <component>`, apply the same treatment to the new componen
 
 ## Default highlight colors
 
-These are the out-of-the-box find colors. They're also the brand's "find" palette in screenshots and marketing.
+These are the out-of-the-box find colors, and the brand's "find" palette in screenshots and marketing. They're the brand's lighthouse: Beam light over Night, with a Signal frame.
 
-| Element | Color |
-| --- | --- |
-| Match | yellow `#FFFF00` background, black text, orange `#FF8C00` underline |
-| Current match | orange `#FF8C00` background, black text, yellow `#FFFF00` border |
-| Magnifier | night background, white text, current-match border |
+| Element | Light backgrounds | Dark backgrounds (automatic style) |
+| --- | --- | --- |
+| Match | Beam `#FFD60A`, black text, `#B34700` underline | amber `#C68B00`, black text, black underline |
+| Current match | Night `#0B1020`, Beam text, Signal `#FF8A00` frame | white, black text, Signal frame |
+| Magnifier | night background, white text, current-match border; the match inside it is framed like on the page | same |
+
+Beam rather than pure yellow: it reads as "highlighted" just the same, and stands out from white pages twice as well for the blue-yellow loss that cataracts and diabetic retinopathy bring.
+
+**How highlight colors are chosen.** Many eye conditions dull color before they dull lightness, so the colors are told apart by lightness first and hue second (Arditi's "Effective Color Contrast"; RNIB's "Colour and contrast for people with sight loss"):
+
+- Text on a highlight is at least 7:1.
+- The current match differs from the other matches in lightness, like the 3:1 change WCAG 2.4.13 asks of a focus indicator. On light backgrounds it's dark with light text; on dark ones it's the brightest thing there.
+- Matches are underlined and the current one is framed, so color is never the only cue.
+
+Every profile has colors for light and for dark backgrounds. The built-in ones adapt the rules to particular conditions: cataracts (inverted high contrast), light sensitivity, and red-green, blue-yellow and no color vision. They only set colors (and, for light sensitivity, no blinking): effects like the spotlight, guide lines and magnifier are personal, and stay off until the user turns them on. `tests/unit/profiles.test.ts` checks the rules for each, on both backgrounds, with simulated color blindness (Machado et al., 2009).
 
 ## Assets
 
 - `npm run icons` regenerates the PNG icons from the SVGs.
 - `SCREENSHOTS=<dir> npm run test:e2e -- screenshots` captures 1280×800 screenshots (dark and light) for review and the README.
 - `npm run store-assets` renders the Chrome Web Store images into `store/`: five captioned screenshots, the promo tiles and the store icon. Captions follow the voice above, with one phrase marked like the current match. `store/LISTING.md` has the listing text.
-- `npm run store-video` records `store/demo.mp4`, the listing's demo video: the real extension in each scene, under the same captions, between a title card and an end card. Silent, 1920×1080, about 50 seconds.
+- `npm run store-video` records `store/demo.mp4`, the listing's demo video: the real extension, filmed scene by scene, with the camera moving in on what matters, a tunnel-vision mask for a narrow field of view, keycaps for the keys pressed, and large subtitles. Mostly on a dark website, with one light page to show the automatic style. Narrated by a local Kokoro voice, `af_heart`; what Accessible Find reads aloud is in a second voice, `am_michael`, with its own subtitle style (a speaker and a beam border). The script is `SCRIPT` in `tests/e2e/store-video.spec.ts`. 1920×1080, about two and a half minutes.

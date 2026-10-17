@@ -4,7 +4,7 @@
  * like the real ones in src/lib/finder/effects.ts, in the user's own colors.
  */
 import { Fragment, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { Info, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { LIMITS } from '@/lib/settings/sanitize';
 import type { Appearance } from '@/lib/settings/types';
 import { cn } from '@/lib/utils';
@@ -148,8 +148,8 @@ function SamplePage(props: {
     return () => observer.disconnect();
   }, [a.borderWidth, effects.magnifier, a.magnifier.fontSize]);
 
-  // The ring closes in from the edges of the page every couple of seconds. Slower than on a
-  // page, where it crosses the whole screen: here it has only a few lines to cross.
+  // The ring closes in from the edges of the page every couple of seconds. Twice as slow as on
+  // a page, where it crosses the whole screen: here it has only a few lines to cross.
   useEffect(() => {
     const ring = ringRef.current;
     const page = pageRef.current;
@@ -163,18 +163,19 @@ function SamplePage(props: {
       height: `${b.height}px`,
       opacity,
     });
+    const duration = a.ping.durationMs * 2;
     const play = () =>
       ring.animate([frame(start, 0.9), { ...frame(end, 1), offset: 0.75 }, frame(end, 0)], {
-        duration: 1400,
+        duration,
         easing: 'ease-in-out',
       });
     play();
-    const timer = window.setInterval(play, 2400);
+    const timer = window.setInterval(play, duration + 1000);
     return () => {
       window.clearInterval(timer);
       for (const animation of ring.getAnimations()) animation.cancel();
     };
-  }, [effects.ring, hole, a.borderWidth]);
+  }, [effects.ring, hole, a.borderWidth, a.ping.durationMs]);
 
   const pad = 2 + a.borderWidth;
   const line = Math.max(2, a.borderWidth);
@@ -204,7 +205,16 @@ function SamplePage(props: {
           }}
         >
           {sample.words.slice(Math.max(0, sample.current - 3), sample.current).join(' ')}{' '}
-          <mark style={{ background: a.currentBg, color: a.currentText, borderRadius: 4, padding: '0 0.12em' }}>
+          <mark
+            style={{
+              background: a.currentBg,
+              color: a.currentText,
+              borderRadius: 4,
+              padding: '0 0.12em',
+              margin: '0 0.1em',
+              boxShadow: `0 0 0 0.08em ${a.currentBorder}`,
+            }}
+          >
             {sample.words[sample.current]}
           </mark>{' '}
           {sample.words.slice(sample.current + 1, sample.current + 3).join(' ')}
@@ -260,7 +270,7 @@ function SamplePage(props: {
               style={{
                 ...at(grow(hole, 6 + a.borderWidth)),
                 opacity: effects.ring === 'still' ? 1 : 0,
-                border: `${Math.max(4, a.borderWidth + 1)}px solid ${a.currentBorder}`,
+                border: `${a.ping.width}px solid ${a.currentBorder}`,
                 boxShadow: '0 0 0 2px #000, inset 0 0 0 2px #000',
               }}
             />
@@ -271,32 +281,15 @@ function SamplePage(props: {
   );
 }
 
-/**
- * Sample text on a light and a dark page, styled the way matches will look there. With
- * automatic style on, the two pages can have different colors, which `note` explains.
- */
-export function Preview({ light, dark, note }: { light: Appearance; dark: Appearance; note?: string }) {
-  const effects = (a: Appearance): SampleEffects => ({
-    spotlight: a.spotlight.enabled,
-    guides: a.guides.enabled,
-    magnifier: a.magnifier.enabled,
-  });
+/** Sample text on a light or a dark page, styled the way matches look there, with the profile's effects. */
+export function PagePreview({ a, dark, label }: { a: Appearance; dark?: boolean; label: string }) {
   return (
-    <div className="space-y-3">
-      <div
-        className="grid gap-3 @2xl:grid-cols-2"
-        role="img"
-        aria-label="Preview of the highlight style on a light and a dark page"
-      >
-        <SamplePage a={light} effects={effects(light)} label="On a light page" />
-        <SamplePage a={dark} effects={effects(dark)} dark label="On a dark page" />
-      </div>
-      {note && (
-        <p className="flex items-start gap-2 text-sm text-muted-foreground">
-          <Info className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <span>{note}</span>
-        </p>
-      )}
+    <div role="img" aria-label={label}>
+      <SamplePage
+        a={a}
+        dark={dark}
+        effects={{ spotlight: a.spotlight.enabled, guides: a.guides.enabled, magnifier: a.magnifier.enabled }}
+      />
     </div>
   );
 }
@@ -320,7 +313,7 @@ const EXAMPLES: Record<ExampleKind, { title: string; text: string; moves?: boole
   underline: { title: 'Underline', text: 'Every match is underlined too, a second cue that doesn’t rely on color.' },
   spotlight: {
     title: 'Spotlight',
-    text: 'Everything but the current match is dimmed, so it’s the brightest thing on the screen.',
+    text: 'Everything but the current match is dimmed, so it’s the brightest thing on the screen. It also cuts glare from bright pages.',
   },
   ring: {
     title: 'Ring',
@@ -329,12 +322,15 @@ const EXAMPLES: Record<ExampleKind, { title: string; text: string; moves?: boole
   },
   guides: {
     title: 'Guide lines',
-    text: 'Lines across the whole screen frame the match’s row and column. Follow either one to the match.',
+    text: 'Lines across the whole screen frame the match’s row and column. Follow either one to the match: they reach a narrow field of view wherever it is.',
   },
-  magnifier: { title: 'Magnifier', text: 'The match and the words around it in large text, right next to it.' },
+  magnifier: {
+    title: 'Magnifier',
+    text: 'The match and the words around it in large text, right next to it. Helpful when the middle of your sight is blurred or missing.',
+  },
   'auto-style': {
     title: 'Automatic style',
-    text: 'Matches on a dark background, like a dark page or a code block, take the colors of a profile made for it. The others keep your profile’s colors.',
+    text: 'Matches on a dark background, like a dark page or a code block, switch to colors made for dark backgrounds. You can change those in the settings.',
   },
   'bar-context': {
     title: 'Words around the match',

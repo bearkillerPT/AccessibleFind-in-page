@@ -8,7 +8,7 @@ import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import type { SettingsApi } from '@/hooks/use-settings';
 import { openSettings } from '@/lib/platform';
 import { UI_SCALES } from '@/lib/settings/defaults';
-import { appearanceForPage, colorProfileForPage, withColorsFrom } from '@/lib/settings/schema';
+import { appearanceForPage, darkVersion } from '@/lib/settings/schema';
 import type { Appearance, PageTone } from '@/lib/settings/types';
 
 /** The find bar's settings panel: profile, effects, automatic style and text size. */
@@ -19,8 +19,6 @@ export function QuickSettings({ api, tone }: { api: SettingsApi; tone: PageTone 
   const auto = state.prefs.autoProfile;
   // Automatic style only changes colors; these switches always belong to the active profile.
   const profile = state.active;
-  const colors = colorProfileForPage(state, tone);
-  const dark = state.profiles.find((p) => p.id === auto.dark) ?? profile;
   const a = profile.appearance;
   // Examples look the way matches look on this page.
   const example = (kind: ExampleKind) => (
@@ -50,7 +48,7 @@ export function QuickSettings({ api, tone }: { api: SettingsApi; tone: PageTone 
       kind: 'ring' as const,
       description: 'Closes in on the match',
       checked: a.ping.enabled,
-      set: (v: boolean) => set({ ping: { enabled: v } }),
+      set: (v: boolean) => set({ ping: { ...a.ping, enabled: v } }),
     },
     {
       label: 'Spotlight',
@@ -103,14 +101,14 @@ export function QuickSettings({ api, tone }: { api: SettingsApi; tone: PageTone 
           !auto.enabled
             ? 'Use other colors on dark backgrounds.'
             : tone === 'dark'
-              ? `This page looks dark, so matches use the colors of “${colors.name}”.`
-              : `On dark backgrounds, matches use the colors of “${dark.name}”.`
+              ? 'This page looks dark, so matches use colors made for dark backgrounds.'
+              : 'On dark backgrounds, matches switch to colors made for them.'
         }
         example={
           <EffectExample
             kind="auto-style"
             appearance={a}
-            darkAppearance={withColorsFrom(a, dark.appearance)}
+            darkAppearance={darkVersion(a)}
             reducedMotion={reducedMotion}
           />
         }

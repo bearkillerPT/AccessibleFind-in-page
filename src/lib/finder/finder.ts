@@ -55,6 +55,12 @@ const REUSE_COST_FACTOR = 10;
 /** Said when read aloud finds nothing to read, so the key never seems to do nothing. */
 const NOTHING_TO_READ = 'Nothing to read yet. Select some text, or search for a word.';
 
+/**
+ * More than a search, so pasted in to be heard: over two words, or long enough to be a
+ * sentence in a language without spaces.
+ */
+const isPassage = (text: string) => text.split(/\s+/).length > 2 || text.length > 40;
+
 type Dirty = 'none' | 'attributes' | 'content';
 
 function closedShadowRoot(el: Element): ShadowRoot | null {
@@ -529,13 +535,16 @@ export class Finder {
   private textToRead(given: string | undefined, inBar: boolean): string {
     const match = this.currentSentence();
     if (inBar && match) return match;
+    const query = this.query.trim();
+    // Text pasted into the find bar to be heard goes first: a page selection may be one left
+    // over from opening the bar with Ctrl+F.
+    if (inBar && isPassage(query)) return query;
     const field = inBar ? null : focusedField();
     // A focused field's text, never the page selection: that could be a password's.
     const selected = given?.trim() || (field ? textInField(field) : (window.getSelection()?.toString() ?? '')).trim();
     if (selected) return selected;
     if (match) return match;
     if (!inBar) return (field ? null : this.caretSentence()) ?? NOTHING_TO_READ;
-    const query = this.query.trim();
     return query ? `No results for “${query}”.` : NOTHING_TO_READ;
   }
 

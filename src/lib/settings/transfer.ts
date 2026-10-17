@@ -5,7 +5,7 @@
  */
 import { MAX_PROFILES, makeDefaultProfile } from './defaults';
 import { sanitizeAppearance, sanitizeName, sanitizePrefs } from './sanitize';
-import { builtInProfile, isBuiltInId, isChangedBuiltIn, profileKey, SCHEMA_VERSION } from './schema';
+import { builtInProfile, isBuiltInId, isChangedBuiltIn, isReservedId, profileKey, SCHEMA_VERSION } from './schema';
 import type { Appearance, Prefs, Profile, SettingsState } from './types';
 
 export const BACKUP_FORMAT = 'accessible-find-backup';
@@ -13,8 +13,10 @@ export const PROFILE_FORMAT = 'accessible-find-profile';
 /**
  * Bump when the file layout changes; older files must keep importing.
  * 2: backups also hold the built-in profiles the user changed (`builtIns`).
+ * 3: each profile holds its colors for dark backgrounds (`appearance.dark`), and the
+ *    settings no longer name a profile for dark pages. Older files get the default ones.
  */
-export const FILE_VERSION = 2;
+export const FILE_VERSION = 3;
 const MAX_FILE_CHARS = 1_000_000;
 const SAFE_ID = /^[\w-]{1,64}$/;
 
@@ -109,7 +111,7 @@ export function readBackup(text: string): ReadResult<{ records: Obj; profileCoun
   for (const item of list.slice(0, MAX_PROFILES)) {
     if (typeof item !== 'object' || item === null) continue;
     const p = item as Obj;
-    let id = typeof p.id === 'string' && SAFE_ID.test(p.id) && !isBuiltInId(p.id) ? p.id : '';
+    let id = typeof p.id === 'string' && SAFE_ID.test(p.id) && !isReservedId(p.id) ? p.id : '';
     if (!id || ids.includes(id)) id = crypto.randomUUID().slice(0, 8);
     ids.push(id);
     records[profileKey(id)] = { id, name: sanitizeName(p.name, 'Profile'), appearance: sanitizeAppearance(p.appearance) };

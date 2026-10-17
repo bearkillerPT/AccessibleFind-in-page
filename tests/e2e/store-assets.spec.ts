@@ -112,7 +112,8 @@ test('3: every match in a list', async ({ page, sw }) => {
 });
 
 test('4: highlight style', async ({ context, sw }) => {
-  await setPrefs(sw, { theme: 'light' });
+  // At 100% text, both kinds of page fit side by side in the shot.
+  await setPrefs(sw, { theme: 'light', uiScale: 1 });
   const page = await context.newPage();
   await page.setViewportSize(SHOT);
   await page.goto(`chrome-extension://${new URL(sw.url()).host}/options.html#appearance`);
@@ -120,7 +121,7 @@ test('4: highlight style', async ({ context, sw }) => {
   await compose(
     '4-highlight-style.png',
     'Colors that *work for you*',
-    'High-contrast and colour-blind-friendly profiles, or your own, with a contrast check.',
+    'Profiles for cataracts, light sensitivity and color blindness, or your own.',
     await page.screenshot(),
   );
 });
@@ -160,12 +161,14 @@ function pageArt(opts: { width: number; lines: number; word: number; gap: number
       const key = `${line},${i}`;
       if (line === current[0] && i === current[1]) {
         found = { x, y, w, h: word * 1.6 };
+        // Night lit in Beam, in a Signal frame: the default current match.
         svg += `<rect x="${x - 6}" y="${y - word * 0.3 - 6}" width="${w + 12}" height="${word * 1.6 + 12}" rx="${word * 0.4}" fill="#000"/>`;
-        svg += `<rect x="${x - 3}" y="${y - word * 0.3 - 3}" width="${w + 6}" height="${word * 1.6 + 6}" rx="${word * 0.35}" fill="#FFFF00"/>`;
-        svg += `<rect x="${x}" y="${y - word * 0.3}" width="${w}" height="${word * 1.6}" rx="${word * 0.3}" fill="#FF8C00"/>`;
+        svg += `<rect x="${x - 4}" y="${y - word * 0.3 - 4}" width="${w + 8}" height="${word * 1.6 + 8}" rx="${word * 0.38}" fill="#FF8A00"/>`;
+        svg += `<rect x="${x}" y="${y - word * 0.3}" width="${w}" height="${word * 1.6}" rx="${word * 0.3}" fill="#0B1020"/>`;
+        svg += `<rect x="${x + w * 0.14}" y="${y + word * 0.12}" width="${w * 0.72}" height="${word * 0.76}" rx="${word * 0.38}" fill="#FFD60A"/>`;
       } else if (matches.has(key)) {
-        svg += `<rect x="${x}" y="${y - word * 0.3}" width="${w}" height="${word * 1.6}" rx="${word * 0.25}" fill="#FFFF00"/>`;
-        svg += `<rect x="${x}" y="${y + word * 1.1}" width="${w}" height="${word * 0.22}" fill="#FF8C00"/>`;
+        svg += `<rect x="${x}" y="${y - word * 0.3}" width="${w}" height="${word * 1.6}" rx="${word * 0.25}" fill="#FFD60A"/>`;
+        svg += `<rect x="${x}" y="${y + word * 1.1}" width="${w}" height="${word * 0.22}" fill="#B34700"/>`;
       } else {
         svg += `<rect x="${x}" y="${y}" width="${w}" height="${word}" rx="${word / 2}" fill="#AEB9D6"/>`;
       }

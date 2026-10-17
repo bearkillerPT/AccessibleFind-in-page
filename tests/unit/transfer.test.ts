@@ -45,7 +45,9 @@ describe('backups', () => {
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     const restored = stateFromRaw(result.value.records);
-    expect(restored.profiles.find((p) => p.id === 'sys-colorblind')).toEqual(BUILT_IN_PROFILES[2]);
+    expect(restored.profiles.find((p) => p.id === 'sys-colorblind')).toEqual(
+      BUILT_IN_PROFILES.find((p) => p.id === 'sys-colorblind'),
+    );
     expect(restored.activeProfileId).toBe('night1');
   });
 
