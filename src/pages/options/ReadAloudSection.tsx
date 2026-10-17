@@ -12,7 +12,7 @@ import { useCommandShortcut } from '@/hooks/use-command-shortcut';
 import type { SettingsApi } from '@/hooks/use-settings';
 import { useVoices } from '@/hooks/use-voices';
 import { READ_ALOUD_COMMAND } from '@/lib/messages';
-import { openBrowserPage, shortcutsUrl } from '@/lib/platform';
+import { openShortcutSettings } from '@/lib/platform';
 import { LIMITS } from '@/lib/settings/sanitize';
 import { formatCombo } from '@/lib/shortcuts';
 import { speak, speechAvailable } from '@/lib/speech';
@@ -27,6 +27,16 @@ export function ReadAloudSection({ api }: { api: SettingsApi }) {
   const speech = state.prefs.speech;
   const set = (patch: Partial<typeof speech>) => api.updatePrefs({ speech: { ...speech, ...patch } });
   const sorted = [...voices].sort((a, b) => a.lang.localeCompare(b.lang) || a.name.localeCompare(b.name));
+  const online = sorted.filter((v) => !v.localService).length;
+  // "Automatic" lets the browser pick one of these: with no voices on the device, an online one.
+  const onlineNote =
+    online === 0
+      ? null
+      : `Online voices send what’s read to your browser’s speech service. ${
+          online === sorted.length
+            ? 'This browser has no voices on the device, so Automatic is online too.'
+            : 'The others work on this device. Automatic may use either.'
+        }`;
   const key = formatCombo(state.prefs.shortcuts.readAloud);
 
   if (!speechAvailable()) {
@@ -51,7 +61,7 @@ export function ReadAloudSection({ api }: { api: SettingsApi }) {
               <Label htmlFor={voiceId}>Voice</Label>
               <NativeSelect
                 id={voiceId}
-                aria-describedby={sorted.some((v) => !v.localService) ? `${voiceId}-online` : undefined}
+                aria-describedby={onlineNote ? `${voiceId}-online` : undefined}
                 className="w-full max-w-md"
                 value={speech.voiceURI}
                 onChange={(e) => set({ voiceURI: e.target.value })}
@@ -63,9 +73,9 @@ export function ReadAloudSection({ api }: { api: SettingsApi }) {
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-              {sorted.some((v) => !v.localService) && (
+              {onlineNote && (
                 <p id={`${voiceId}-online`} className="text-sm text-muted-foreground">
-                  Online voices send what’s read to your browser’s speech service. The others work on this device.
+                  {onlineNote}
                 </p>
               )}
             </div>
@@ -118,7 +128,7 @@ export function ReadAloudSection({ api }: { api: SettingsApi }) {
           </p>
         </CardContent>
         <CardFooter>
-          <Button variant="outline" onClick={() => openBrowserPage(shortcutsUrl())}>
+          <Button variant="outline" onClick={() => openShortcutSettings()}>
             {browserShortcut === '' ? 'Choose a shortcut' : 'Change shortcut'}
             <ExternalLink aria-hidden />
           </Button>

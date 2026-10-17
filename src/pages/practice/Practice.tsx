@@ -15,7 +15,7 @@ import { usePageStyle } from '@/hooks/use-page-style';
 import { useSettings } from '@/hooks/use-settings';
 import { Finder } from '@/lib/finder/finder';
 import { EXTENSION_PAGE_MESSAGE, OPEN_COMMAND, READ_ALOUD_COMMAND } from '@/lib/messages';
-import { ctrlFLabel, isCtrlF, isMac, openBrowserPage, shortcutsUrl } from '@/lib/platform';
+import { ctrlFLabel, isCtrlF, isMac, openShortcutSettings } from '@/lib/platform';
 import { DEFAULT_SHORTCUTS, formatCombo, isLetterKey } from '@/lib/shortcuts';
 
 function Step({ n, children }: { n: number; children: ReactNode }) {
@@ -140,7 +140,7 @@ export function Practice() {
                     To hear selected text with the find bar closed, give “Read aloud the selected text” a key in the
                     browser’s shortcut settings.
                   </p>
-                  <Button variant="outline" className="mt-2" onClick={() => openBrowserPage(shortcutsUrl())}>
+                  <Button variant="outline" className="mt-2" onClick={() => openShortcutSettings()}>
                     Open shortcut settings
                     <ExternalLink aria-hidden />
                   </Button>

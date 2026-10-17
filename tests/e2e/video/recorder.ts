@@ -23,7 +23,7 @@ const SUBTITLES = 190;
 /** Output pixels per page pixel with the camera all the way out. */
 const K = 1920 / VIEW.width;
 
-/** A narrow field of view: what's left visible around (x, y), on the page. `a` is how dark the rest is. */
+/** A narrow field of view: what's left visible around (x, y), on the page. `a` (0 to 1) is how strongly the rest is veiled (see compose.ts). */
 export interface Mask {
   x: number;
   y: number;

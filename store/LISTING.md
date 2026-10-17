@@ -46,7 +46,7 @@ WORKS THE WAY YOU EXPECT
 • A practice page to try everything safely.
 
 PRIVATE BY DESIGN
-Accessible Find reads a page only when you search it, on your device. There are no accounts, ads or analytics, and nothing is sent to the developer. Recent searches stay on this device, and you can turn them off.
+Accessible Find reads a page only when you search it, on your device. There are no accounts, ads or analytics, and nothing is sent to the developer. Recent searches stay on this device, and you can turn them off. Read aloud uses your browser's voices; the settings point out the online ones, which send what's read to the browser's speech service.
 
 WHERE IT CAN'T RUN
 Browsers don't let any extension run on their own pages (settings, the new tab page), on the Chrome Web Store, or in the built-in PDF viewer. With Ctrl+F on every website turned on, those pages get the browser's own find instead; otherwise Accessible Find tells you why, and how to open the browser's own find. Text inside embedded frames and form fields isn't searched yet.

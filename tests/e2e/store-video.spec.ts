@@ -12,6 +12,7 @@ import path from 'node:path';
 import { expect, findBar, goto, launch, openViaCommand, readViaCommand, test as base } from './harness';
 import { dataUrl, ICON_EDGE, marked, setEffects, setPrefs } from './store-art';
 import { compose } from './video/compose';
+import { E2E_PRETEND_SPEECH_KEY } from '../../src/lib/messages';
 import { narrate, READER_VOICE, type Line } from './video/narration';
 import {
   centerOf,
@@ -40,7 +41,7 @@ const SCRIPT = {
   press: 'Press Control F, and type what you’re looking for.',
   lit: 'Every match lights up in bold colors, and blinks, so you notice it.',
   ring: 'Press Enter for the next match. A ring closes in on it from the edges of the screen, so even a narrow view catches it.',
-  help: 'Need more help? From the find bar, turn on guide lines that cross at the match, a spotlight that dims everything else, and a magnifier that repeats it in large text.',
+  help: 'There’s more help in the find bar: guide lines that cross at the match, a spotlight that dims everything else, and a magnifier that repeats it in large text.',
   follow: 'Follow a guide line, and it leads you straight to the match.',
   list: 'Press Alt L to read every match in one list, in large text. The arrow keys move through them, and the page follows.',
   readMatch: 'Press Alt R, or the speaker button, to hear the sentence around the match.',
@@ -52,9 +53,15 @@ const SCRIPT = {
   light: 'Matches pick their colors for the background they’re on, so they stand out on light pages too.',
   profiles:
     'In the settings, choose a profile for your eyes: high contrast for cataracts, warm colors for light sensitivity, or colors for each kind of color blindness.',
+  tools:
+    'Each tool has settings of its own: how often matches blink, and how fast, how much the spotlight dims, how slow and thick the ring is, and how big the magnifier’s text is.',
+  overview:
+    'And there’s more in the settings: how it opens, the find bar’s size, theme and place on the screen, your own shortcuts, the voice and its speed, and backups to keep or share your profiles.',
   limits:
     'A few pages are off limits to every extension, like the browser’s own pages, the Chrome Web Store, and PDFs. There, Accessible Find tells you why, and how to use the browser’s own find instead.',
-  end: 'Accessible Find is free and open source. Get it on the Chrome Web Store.',
+  privacy:
+    'Nothing is collected or sent anywhere: your searches stay on your device. Read aloud uses your browser’s voices, and the settings point out the online ones, which send the text to its speech service.',
+  end: 'Accessible Find is free and open source. Get it on the Chrome Web Store, or on Firefox Add-ons.',
 };
 
 /** What Accessible Find reads aloud in the video, word for word (the test checks it). */
@@ -69,8 +76,12 @@ const READ = {
 const DARK_ARTICLE =
   'body{background:#14161b;color:#d9dde6} header{background:#05070c} .meta{color:#9aa3b5} main{padding-bottom:50vh}' +
   ' ::selection{background:#3a64c8;color:#fff}';
+/** The ring, slower and thicker than by default, so it shows in the video (both are settings). */
+const RING = { ping: { enabled: true, durationMs: 1500, width: 8 } };
 /** What's left of the screen with a narrow field of view, in page pixels. */
 const TUNNEL = 150;
+/** The narrow field of view at full strength (how dark that leaves the rest is in compose.ts). */
+const VEIL = 1;
 
 const test = base.extend({
   // The screencast sends device pixels only when Chrome itself is scaled.
@@ -180,11 +191,15 @@ test('demo video', async ({ context, page, sw }) => {
   for (const [key, text] of Object.entries(SCRIPT)) say[key as keyof typeof SCRIPT] = await narrate(text, voices);
   const heard = {} as Record<keyof typeof READ, Line>;
   for (const [key, text] of Object.entries(READ)) heard[key as keyof typeof READ] = await narrate(text, voices, READER_VOICE);
+  // Headless Chrome has no voices, so reading would end at once: the e2e build pretends to read
+  // each of these for as long as its voice in the video, and the find bar shows Stop meanwhile.
+  const pretend = Object.fromEntries(Object.entries(READ).map(([key, text]) => [text, heard[key as keyof typeof READ].seconds]));
+  await sw.evaluate(([key, value]) => chrome.storage.local.set({ [key]: value }), [E2E_PRETEND_SPEECH_KEY, pretend] as const);
   const id = new URL(sw.url()).host;
 
   const rec = new Recorder(work);
   await setPrefs(sw, { theme: 'dark', uiScale: 1.25, barPosition: 'top-right' });
-  await setEffects(sw, {});
+  await setEffects(sw, RING);
   await goto(page, 'article.html');
   await page.addStyleTag({ content: DARK_ARTICLE });
   await fitWindow(page);
@@ -210,12 +225,12 @@ test('demo video', async ({ context, page, sw }) => {
   await rec.film('narrow field of view', async () => {
     const lineDone = rec.say(say.narrow);
     await sleep(800);
-    rec.mask({ x: 640, y: 380, r: TUNNEL, a: 0.97 }, 2.6);
+    rec.mask({ x: 640, y: 380, r: TUNNEL, a: VEIL }, 2.6);
     await lineDone;
     const lost = rec.say(say.lost);
-    rec.mask({ x: 430, y: 250, r: TUNNEL, a: 0.97 }, 1.8);
+    rec.mask({ x: 430, y: 250, r: TUNNEL, a: VEIL }, 1.8);
     await sleep(2000);
-    rec.mask({ x: 860, y: 470, r: TUNNEL, a: 0.97 }, 1.8);
+    rec.mask({ x: 860, y: 470, r: TUNNEL, a: VEIL }, 1.8);
     await lost;
     const made = rec.say(say.made);
     rec.mask(NO_MASK, 1.8);
@@ -237,17 +252,19 @@ test('demo video', async ({ context, page, sw }) => {
   });
 
   await rec.film('ring', async () => {
-    rec.mask({ x: 640, y: 380, r: TUNNEL + 20, a: 0.97 }, 0.9);
-    await sleep(1000);
     const lineDone = rec.say(say.ring);
     await sleep(900);
-    for (let i = 0; i < 2; i++) {
-      await press('Enter', 'Enter');
-      await sleep(1000);
-      const match = await currentMatch(page);
-      if (match) rec.mask({ ...centerOf(match), r: TUNNEL + 20, a: 0.97 }, 0.9);
-      await sleep(1800);
-    }
+    // On the whole screen first, where the ring is easy to follow.
+    await press('Enter', 'Enter');
+    await sleep(2300);
+    // Then with a narrow field of view: the ring crosses it on its way to the match.
+    rec.mask({ x: 640, y: 380, r: TUNNEL + 20, a: VEIL }, 0.9);
+    await sleep(1100);
+    await press('Enter', 'Enter');
+    await sleep(1000);
+    const match = await currentMatch(page);
+    if (match) rec.mask({ ...centerOf(match), r: TUNNEL + 20, a: VEIL }, 0.9);
+    await sleep(1800);
     await lineDone;
     rec.mask(NO_MASK, 1);
     // The match up to the middle of the screen, so the magnifier has room below it, clear of the subtitles.
@@ -277,16 +294,16 @@ test('demo video', async ({ context, page, sw }) => {
     // A guide line reaches into a narrow view, and leads it to the match.
     const match = centerOf((await currentMatch(page))!);
     const follow = rec.say(say.follow);
-    rec.mask({ x: 110, y: match.y, r: TUNNEL, a: 0.97 }, 0.9);
+    rec.mask({ x: 110, y: match.y, r: TUNNEL, a: VEIL }, 0.9);
     await sleep(1300);
-    rec.mask({ ...match, r: TUNNEL, a: 0.97 }, 2.2);
+    rec.mask({ ...match, r: TUNNEL, a: VEIL }, 2.2);
     await follow;
     await sleep(800);
     rec.mask(NO_MASK, 0.9);
     await sleep(1000);
   });
 
-  await setEffects(sw, {});
+  await setEffects(sw, RING);
   await sleep(800);
   await rec.film('list', async () => {
     const lineDone = rec.say(say.list);
@@ -487,6 +504,53 @@ test('demo video', async ({ context, page, sw }) => {
     await sleep(1000);
   });
 
+  // Each tool's own settings, under the profile's colors.
+  await rec.film('tool settings', async () => {
+    const lineDone = rec.say(say.tools);
+    await settings
+      .getByRole('heading', { name: 'Underline, border and blinking' })
+      .evaluate((el) => scrollBy({ top: el.getBoundingClientRect().top - 80, behavior: 'smooth' }));
+    await sleep(2600);
+    for (const [name, then] of [
+      ['Spotlight', 1700],
+      ['Magnifier', 1500],
+    ] as const) {
+      const toggle = settings.getByRole('switch', { name, exact: true });
+      // Clear of the subtitles.
+      await toggle.evaluate((el) => {
+        const { bottom } = el.getBoundingClientRect();
+        if (bottom > innerHeight * 0.55) scrollBy({ top: bottom - innerHeight * 0.4, behavior: 'smooth' });
+      });
+      await sleep(700);
+      await pointAt(settings, toggle);
+      await toggle.click();
+      await sleep(then);
+      if (name === 'Spotlight') {
+        await pointAt(settings, settings.getByRole('slider', { name: 'Ring duration' }));
+        await sleep(1500);
+      }
+    }
+    await lineDone;
+    await hidePointer(settings);
+    await sleep(400);
+  });
+
+  // A quick tour of the other settings pages, in step with the line.
+  await rec.film('settings overview', async () => {
+    const lineDone = rec.say(say.overview);
+    await settings.evaluate(() => scrollTo({ top: 0, behavior: 'smooth' }));
+    await sleep(500);
+    for (const name of ['Opening it', 'Find bar', 'Shortcuts', 'Read aloud', 'Backup']) {
+      const link = settings.getByRole('link', { name, exact: true });
+      await pointAt(settings, link);
+      await link.click();
+      await sleep(1500);
+    }
+    await lineDone;
+    await hidePointer(settings);
+    await sleep(500);
+  });
+
   // A browser page, where no extension may run, with the popup Accessible Find shows there.
   // Headless Chrome has no toolbar to open the popup from, so the scene is put together from
   // pictures of both.
@@ -548,11 +612,31 @@ test('demo video', async ({ context, page, sw }) => {
           <img src="${icon}" style="width:150px;height:150px;border-radius:33px;${ICON_EDGE}">
           <h1 style="margin:0;font-size:96px;font-weight:750;letter-spacing:-0.015em;color:#F4F6FC">Accessible Find</h1>
         </div>
-        <p style="margin:52px 0 0;font-size:40px;line-height:1.45;color:#C9D2EA">Also: larger text, recent searches, your own shortcuts,<br>backups and shared profiles.</p>
-        <p style="margin:44px 0 0;font-size:46px;font-weight:650;color:#F4F6FC">Free and open source, on the Chrome Web Store.</p>`,
+        <p style="margin:44px 0 0;font-size:56px;color:#C9D2EA">${marked('Find in page, made *visible*.')}</p>
+        <p style="margin:56px 0 0;font-size:46px;font-weight:650;color:#F4F6FC">Free and open source, for Chrome and Firefox.</p>`,
     },
     work,
     path.join(OUT!, 'demo.mp4'),
+    [
+      {
+        after: 'limits',
+        card: {
+          line: say.privacy,
+          seconds: 4,
+          html: `<div style="display:flex;align-items:center;gap:30px">
+              <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="#FFD60A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>
+              </svg>
+              <h1 style="margin:0;font-size:88px;font-weight:750;letter-spacing:-0.015em;color:#F4F6FC">Private by design</h1>
+            </div>
+            <ul style="margin:56px 0 0;padding:0;list-style:none;font-size:44px;line-height:1.5;color:#C9D2EA;text-align:left">
+              <li>Nothing is collected or sent anywhere.</li>
+              <li>Your searches stay on your device.</li>
+              <li>Read aloud: the settings point out ${marked('*online*')} voices.</li>
+            </ul>`,
+        },
+      },
+    ],
   );
   await rm(work, { recursive: true, force: true });
 });

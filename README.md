@@ -1,6 +1,6 @@
 # <img src="assets/brand/icon.svg" height="28" alt="" /> Accessible Find in Page
 
-This project is an accessibility-focused browser extension intended to replace the default find-in-page (Ctrl+F) of Chromium-based browsers. I've been diagnosed with Retinitis Pigmentosa, a degenerative eye condition that severely impacts my vision. As a result, I found it challenging to use the default find-in-page feature, which often made it difficult to locate search results on a page. This extension aims to address these challenges with large, customizable highlights and effects that make results easy to see and easy to locate.
+This project is an accessibility-focused browser extension intended to replace the default find-in-page (Ctrl+F) of Chromium-based browsers and Firefox. I've been diagnosed with Retinitis Pigmentosa, a degenerative eye condition that severely impacts my vision. As a result, I found it challenging to use the default find-in-page feature, which often made it difficult to locate search results on a page. This extension aims to address these challenges with large, customizable highlights and effects that make results easy to see and easy to locate.
 
 <img src="docs/images/find-bar.png" alt="The find bar searching for “lighthouse”: every match highlighted in yellow, the current one dark with yellow text in an orange frame, the rest of the page dimmed, and the current match repeated in large text right below it" width="720" />
 
@@ -26,7 +26,11 @@ This project is an accessibility-focused browser extension intended to replace t
 
 ### Chrome Web Store
 
-Go to the [Chrome Web Store listing](https://chromewebstore.google.com/detail/accessible-find-in-page/micmgbkeghgbbdmmoieoodhmofafhhlp) and click "Add to Chrome". If you'd like it on another browser's store, please open an issue.
+Go to the [Chrome Web Store listing](https://chromewebstore.google.com/detail/accessible-find-in-page/micmgbkeghgbbdmmoieoodhmofafhhlp) and click "Add to Chrome". It works in other Chromium-based browsers too, like Edge and Brave.
+
+### Firefox Add-ons
+
+Go to [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/accessible-find-in-page/) and click "Add to Firefox". It needs Firefox 140 or newer (desktop). If you'd like it on another browser's store, please open an issue.
 
 ### From source
 
@@ -34,16 +38,16 @@ You need Node.js 22 or newer (`nvm use` picks it up from `.nvmrc`).
 
 1. Clone the repository.
 2. Run `npm install`.
-3. Run `npm run build`.
-4. Open your browser's extensions page (`chrome://extensions`) and turn on **Developer mode**.
-5. Click **Load unpacked** and select the `.output/chrome-mv3` folder.
+3. Run `npm run build` (or `npm run build:firefox` for Firefox).
+4. Chrome: open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and select the `.output/chrome-mv3` folder.
+5. Firefox: open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on…** and select `.output/firefox-mv3/manifest.json` (it stays until Firefox restarts).
 
 ## Usage
 
 After installing, a welcome page opens. Choose how Ctrl+F should work:
 
 - **Ctrl+F on every website (recommended).** Accessible Find opens when you press Ctrl+F on any site. On pages extensions aren't allowed to run on, the browser's own find opens instead, so Ctrl+F always does something. Your browser will ask you to allow access to all websites, because the extension has to be on each page to notice Ctrl+F. It only reads a page when you search it, and your searches never leave your device.
-- **Keyboard shortcut only.** No site access needed. The default shortcut is Alt+Shift+F, and you can set it to Ctrl+F on the browser's shortcuts page (`chrome://extensions/shortcuts`). On pages it can't run on, a message explains why, and pressing the shortcut again opens the browser's own find (with Ctrl+F; with another key, Ctrl+F goes straight there).
+- **Keyboard shortcut only.** No site access needed. The default shortcut is Alt+Shift+F, and you can set it to Ctrl+F on the browser's shortcuts page (`chrome://extensions/shortcuts`, or in Firefox ☰ → Add-ons and themes → ⚙ → Manage Extension Shortcuts). On pages it can't run on, a message explains why, and pressing the shortcut again opens the browser's own find (with Ctrl+F; with another key, Ctrl+F goes straight there).
 
 You can also click the toolbar icon. Change everything later from the find bar's quick settings or the full settings page.
 
@@ -66,7 +70,7 @@ The Alt shortcuts can be changed in the settings, under Find bar shortcuts. Read
 
 ### Where it can't run
 
-Browsers don't let any extension run on their own pages (settings, history, the new tab page), on the extension store, or inside the built-in PDF viewer. Opening Accessible Find there shows why, and how to use the browser's own find instead. Local files need **Allow access to file URLs** on the extension's details page. Text inside embedded frames and form fields isn't searched yet.
+Browsers don't let any extension run on their own pages (settings, history, the new tab page), on the extension store, or inside the built-in PDF viewer; Firefox also keeps extensions off some other Mozilla sites (support, accounts). Opening Accessible Find there shows why, and how to use the browser's own find instead. Local files need **Allow access to file URLs** on the extension's details page in Chrome, and "Ctrl+F on every website" in Firefox. Text inside embedded frames and form fields isn't searched yet.
 
 ## Ideas for the future
 
@@ -76,7 +80,8 @@ Not planned yet. If one of these would help you, please open an issue.
 - **Find bar next to the match:** an option to move the bar beside the current match, so both stay inside a narrow field of view.
 - **Embedded frames and form fields:** search text inside iframes (comments, embedded documents) and inside text boxes.
 - **Several terms at once,** each in its own color, for scanning a page for more than one thing.
-- **Translations,** starting with Portuguese, and releases for Edge and Firefox (Firefox's own find API even works in its PDF viewer).
+- **Translations,** starting with Portuguese, and a release on Edge Add-ons.
+- **PDFs in Firefox:** its own find API even works in its built-in PDF viewer.
 - **A true magnifier lens** that enlarges the page itself around the match, images and layout included, instead of a copy of the text.
 - **Main content only:** an option to skip matches in menus, headers and footers.
 - **Per-site preferences:** remember a profile, text size or bar position for each website.
@@ -92,9 +97,12 @@ Not planned yet. If one of these would help you, please open an issue.
 | --- | --- |
 | `npm run dev` | Starts a browser with the extension and reloads it on changes |
 | `npm run build` | Production build in `.output/chrome-mv3` |
+| `npm run build:firefox` | Firefox build in `.output/firefox-mv3` |
 | `npm run zip` | Zip for the Chrome Web Store |
+| `npm run zip:firefox` | Zip for Firefox Add-ons, plus the source code zip its reviewers ask for |
 | `npm test` | Unit tests (search engine, settings) |
 | `npm run test:e2e` | Builds a test version and runs end-to-end tests in Chromium with Playwright |
+| `npm run test:firefox` | Builds the Firefox test version and runs it in your installed Firefox (Puppeteer) |
 | `npm run typecheck` | TypeScript checks |
 | `npm run icons` | Regenerates the PNG icons from `assets/brand/*.svg` |
 | `npm run store-assets` | Renders the Chrome Web Store screenshots and promo tiles into `store/` |

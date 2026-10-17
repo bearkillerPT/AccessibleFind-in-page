@@ -9,7 +9,7 @@ import { usePageStyle } from '@/hooks/use-page-style';
 import { useSettings } from '@/hooks/use-settings';
 import type { UnavailableReason } from '@/lib/background/unavailable';
 import { OPEN_COMMAND } from '@/lib/messages';
-import { ctrlFLabel, extensionDetailsUrl, isCtrlF, openBrowserPage, shortcutsUrl } from '@/lib/platform';
+import { ctrlFLabel, extensionDetailsUrl, isCtrlF, isFirefox, openBrowserPage, openShortcutSettings } from '@/lib/platform';
 
 const REASONS: Record<UnavailableReason, { icon: typeof CircleOff; title: string; body: string }> = {
   'browser-page': {
@@ -32,10 +32,21 @@ const REASONS: Record<UnavailableReason, { icon: typeof CircleOff; title: string
     title: 'This isn’t a web page',
     body: 'It’s a file such as an image, SVG or XML document, which Accessible Find can’t search.',
   },
-  file: {
-    icon: FileLock,
-    title: 'Allow access to files first',
-    body: 'This page is a file on your computer. Turn on “Allow access to file URLs” on the extension’s details page to search it.',
+  file: isFirefox
+    ? {
+        icon: FileLock,
+        title: 'Turn on access to all websites first',
+        body: 'This page is a file on your computer. Firefox lets extensions read files only with access to all websites: turn on “Ctrl+F on every website” in the settings to search it.',
+      }
+    : {
+        icon: FileLock,
+        title: 'Allow access to files first',
+        body: 'This page is a file on your computer. Turn on “Allow access to file URLs” on the extension’s details page to search it.',
+      },
+  'mozilla-site': {
+    icon: LockKeyhole,
+    title: 'Firefox protects this site',
+    body: 'Firefox doesn’t let extensions run on some of Mozilla’s own sites, like its support and account pages.',
   },
   'extension-page': {
     icon: LockKeyhole,
@@ -122,14 +133,14 @@ export function Unavailable() {
         )
       )}
       <div className="flex flex-wrap gap-2">
-        {reason === 'file' && (
+        {reason === 'file' && !isFirefox && (
           <Button onClick={() => openBrowserPage(extensionDetailsUrl())}>
             Open extension details
             <ExternalLink aria-hidden />
           </Button>
         )}
         {ownsCtrlF && (
-          <Button variant="outline" onClick={() => openBrowserPage(shortcutsUrl())}>
+          <Button variant="outline" onClick={() => openShortcutSettings()}>
             Change shortcut
             <ExternalLink aria-hidden />
           </Button>

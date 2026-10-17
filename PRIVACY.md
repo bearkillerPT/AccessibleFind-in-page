@@ -1,6 +1,6 @@
 # Privacy policy
 
-*Accessible Find in Page, a browser extension. Last updated October 16, 2026.*
+*Accessible Find in Page, a browser extension for Chrome, other Chromium browsers and Firefox. Last updated October 17, 2026.*
 
 Accessible Find doesn't collect, send or sell anything about you. There are no accounts, ads or analytics, and the extension makes no network requests of its own.
 
@@ -12,13 +12,13 @@ If you turn on **Ctrl+F on every website**, your browser asks you to let the ext
 
 ## What it stores
 
-- **Your settings and highlight profiles** are saved in your browser's extension storage. If you use your browser's sync (for example, signed in to Chrome), the browser syncs them between your computers. They go to your browser's sync service, never to us.
+- **Your settings and highlight profiles** are saved in your browser's extension storage. If you use your browser's sync (for example, signed in to Chrome, or Firefox Sync), the browser syncs them between your computers. They go to your browser's sync service, never to us.
 - **Your recent searches** stay on this device only, so you can bring them back with the arrow keys. They're never synced or included in backups. Turn off **Remember recent searches** in the settings and they're deleted.
 - **Backup and profile files** are only made when you click to save one, and they go to your downloads folder.
 
 ## Reading aloud
 
-Read aloud uses the voices built into your browser and computer. Most work on the device. Some of the browser's voices are online voices (in Chrome, the ones named "Google …"): with those, your browser sends the text being read to its speech service. That's handled by your browser, not by Accessible Find. To keep everything on the device, choose another voice in the settings, under Read aloud.
+Read aloud uses the voices built into your browser and computer. Some of the browser's voices are online voices (in Chrome, the ones named "Google …"), and the settings mark them "online": with those, your browser sends the text being read to its speech service. That's handled by your browser, not by Accessible Find. "Automatic" lets the browser pick a voice, and where it has no voices on the device (Chrome on Linux, for example) that's an online one too. To keep everything on the device, choose a voice that isn't marked online, in the settings under Read aloud. Firefox reads with your computer's own voices.
 
 ## Changes and questions
 

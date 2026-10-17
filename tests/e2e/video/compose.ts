@@ -17,6 +17,9 @@ const FPS = 30;
 const OUT = { width: 1920, height: 1080 };
 /** Crossfade between pieces, in seconds. */
 const FADE = 0.5;
+/** How dark a narrow field of view leaves the rest: right outside what's in view, and far from it. */
+const VEIL_NEAR = 0.5;
+const VEIL_FAR = 0.75;
 /** Least silence between the last line of a piece and the first of the next. */
 const LINE_GAP = 0.8;
 /** Output pixels per page pixel, with the camera all the way out. */
@@ -89,7 +92,13 @@ function at<T extends object>(moves: Move<T>[], initial: T, t: number): T {
   return state;
 }
 
-function lay(rec: Recorder, title: Card, end: Card): Piece[] {
+/** A card shown between scenes: after the scene called `after`. */
+export interface Insert {
+  after: string;
+  card: Card;
+}
+
+function lay(rec: Recorder, title: Card, end: Card, inserts: Insert[]): Piece[] {
   const card = (c: Card) => ({
     seconds: Math.max(c.seconds, (c.line?.seconds ?? 0) + 1.8),
     card: c.html,
@@ -107,6 +116,7 @@ function lay(rec: Recorder, title: Card, end: Card): Piece[] {
       lines: s.lines.map((l) => ({ at: l.t - s.from, line: l.line })),
       keys: s.keys.map((k) => ({ at: k.t - s.from, label: k.label })),
     });
+    for (const insert of inserts) if (insert.after === s.name) list.push(card(insert.card));
   }
   list.push(card(end));
   const pieces: Piece[] = [];
@@ -149,13 +159,15 @@ function slot(piece: Piece, u: number, opacity: number): SlotState {
   const x = OUT.width / 2 + (m.x - cx) * K * z;
   const y = OUT.height / 2 + (m.y - cy) * K * z;
   const r = m.r * K * z;
-  // A faint rim around what's left in view, so the edge shows on dark pages too.
+  // What's left in view, a faint rim around it (so the edge shows on dark pages too), then
+  // the rest veiled: half dark right away, and darker toward the edges of the screen.
+  const veil = (alpha: number) => `rgba(4,7,15,${(alpha * m.a).toFixed(3)})`;
   const mask =
     m.a < 0.01
       ? 'none'
       : `radial-gradient(circle at ${x.toFixed(1)}px ${y.toFixed(1)}px, rgba(4,7,15,0) ${r.toFixed(1)}px, ` +
-        `rgba(150,168,215,${(0.28 * m.a).toFixed(3)}) ${(r + 6 * z).toFixed(1)}px, ` +
-        `rgba(4,7,15,${m.a.toFixed(3)}) ${(r + 70 * z).toFixed(1)}px)`;
+        `rgba(150,168,215,${(0.18 * m.a).toFixed(3)}) ${(r + 5 * z).toFixed(1)}px, ` +
+        `${veil(VEIL_NEAR)} ${(r + 40 * z).toFixed(1)}px, ${veil(VEIL_FAR)} ${(r + 640 * z).toFixed(1)}px)`;
   return {
     opacity,
     img: `https://video.local/${path.basename(shot.file)}`,
@@ -253,8 +265,15 @@ async function ffmpeg(args: string[]): Promise<void> {
 }
 
 /** Renders the video to `out`. Work files go to `work`. */
-export async function compose(rec: Recorder, title: Card, end: Card, work: string, out: string): Promise<void> {
-  const pieces = lay(rec, title, end);
+export async function compose(
+  rec: Recorder,
+  title: Card,
+  end: Card,
+  work: string,
+  out: string,
+  inserts: Insert[] = [],
+): Promise<void> {
+  const pieces = lay(rec, title, end, inserts);
   const total = pieces.at(-1)!.start + pieces.at(-1)!.seconds;
   const frames = Math.ceil(total * FPS);
 

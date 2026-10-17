@@ -164,7 +164,21 @@ test('online voices are marked, since they send the text away to be spoken', asy
     'Google US English (en-US, online)',
     'Local English (en-US)',
   ]);
-  await expect(select).toHaveAccessibleDescription(/Online voices send what’s read to your browser’s speech service/);
+  await expect(select).toHaveAccessibleDescription(
+    'Online voices send what’s read to your browser’s speech service. The others work on this device. Automatic may use either.',
+  );
+});
+
+test('with only online voices, as Chrome has on Linux, Automatic is said to be online too', async ({ context, sw }) => {
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    const voices = [{ name: 'Google US English', lang: 'en-US', voiceURI: 'g', localService: false, default: true }];
+    Object.defineProperty(speechSynthesis, 'getVoices', { value: () => voices });
+  });
+  await page.goto(`chrome-extension://${new URL(sw.url()).host}/options.html#read-aloud`);
+  await expect(page.getByRole('combobox', { name: 'Voice' })).toHaveAccessibleDescription(
+    /This browser has no voices on the device, so Automatic is online too\./,
+  );
 });
 
 test('each profile’s colors sit beside how they look, on light and on dark pages', async ({ context, sw }) => {

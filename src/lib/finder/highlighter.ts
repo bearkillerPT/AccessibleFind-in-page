@@ -39,6 +39,15 @@ function stylesheetText(a: Appearance, tone: PageTone): string {
 
 type Layer = Record<Kind, Highlight>;
 
+/**
+ * The page's own view of a DOM object. Firefox runs content scripts behind Xray wrappers,
+ * which can't reach into adoptedStyleSheets (an observable array, so a proxy): it's edited
+ * through the page's view instead. Extension pages (the practice page) have no wrappers,
+ * and Chrome needs nothing of the kind.
+ */
+const pageView = <T extends object>(o: T): T =>
+  import.meta.env.FIREFOX ? ((o as unknown as { wrappedJSObject?: T }).wrappedJSObject ?? o) : o;
+
 export class Highlighter {
   private readonly sheet = new CSSStyleSheet();
   private readonly layers = {} as Record<PageTone, Layer>;
@@ -82,7 +91,7 @@ export class Highlighter {
     if (this.roots.has(root)) return;
     this.roots.add(root);
     try {
-      root.adoptedStyleSheets = [...root.adoptedStyleSheets, this.sheet];
+      pageView(root).adoptedStyleSheets.push(pageView(this.sheet));
     } catch {
       // A page can freeze adoptedStyleSheets; highlights still inherit document styles.
     }
@@ -189,7 +198,9 @@ export class Highlighter {
     for (const tone of TONES) for (const kind of KINDS) CSS.highlights.delete(highlightName(kind, tone));
     for (const root of this.roots) {
       try {
-        root.adoptedStyleSheets = root.adoptedStyleSheets.filter((s) => s !== this.sheet);
+        const sheets = pageView(root).adoptedStyleSheets;
+        const at = sheets.indexOf(pageView(this.sheet));
+        if (at >= 0) sheets.splice(at, 1);
       } catch {
         // See adopt().
       }

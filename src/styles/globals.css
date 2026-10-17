@@ -3,7 +3,8 @@
  * Everything is sized in rem; each page sets the root font size from the
  * "text size" preference, so the whole UI scales together.
  */
-@import "tailwindcss";
+/* Classes come from src only, so a build from the source zip (npm run zip:firefox) matches. */
+@import "tailwindcss" source("../");
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 

@@ -1,6 +1,6 @@
 /** Reading text aloud with the browser's built-in voices (Web Speech API). */
 import { browser } from 'wxt/browser';
-import { E2E_SPOKEN_MESSAGE } from './messages';
+import { E2E_PRETEND_SPEECH_KEY, E2E_SPOKEN_MESSAGE } from './messages';
 
 export interface SpeakOptions {
   rate: number;
@@ -62,9 +62,22 @@ let reading = 0;
  */
 const queued = new Set<SpeechSynthesisUtterance>();
 
+/** e2e builds: texts to pretend to read, and for how many seconds (see E2E_PRETEND_SPEECH_KEY). */
+let pretend: Record<string, number> = {};
+let pretending = 0;
+if (import.meta.env.MODE === 'e2e') {
+  const load = (value: unknown) => {
+    pretend = (value as Record<string, number> | undefined) ?? {};
+  };
+  void browser.storage.local.get(E2E_PRETEND_SPEECH_KEY).then((got) => load(got[E2E_PRETEND_SPEECH_KEY]));
+  browser.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes[E2E_PRETEND_SPEECH_KEY]) load(changes[E2E_PRETEND_SPEECH_KEY].newValue);
+  });
+}
+
 /** Whether the browser is reading aloud, or has something waiting to be read. */
 export function isSpeaking(): boolean {
-  return speechAvailable() && (speechSynthesis.speaking || speechSynthesis.pending);
+  return speechAvailable() && (pretending !== 0 || speechSynthesis.speaking || speechSynthesis.pending);
 }
 
 /** Reads `text` aloud, replacing anything being read. False if there's no speech or no text. */
@@ -77,7 +90,18 @@ export function speak(text: string, options: SpeakOptions): boolean {
   }
   speechSynthesis.cancel();
   queued.clear();
+  window.clearTimeout(pretending);
+  pretending = 0;
   const id = ++reading;
+  const seconds = import.meta.env.MODE === 'e2e' ? pretend[chunks.join(' ')] : undefined;
+  if (seconds !== undefined) {
+    options.onStart?.();
+    pretending = window.setTimeout(() => {
+      pretending = 0;
+      if (id === reading) options.onEnd?.();
+    }, seconds * 1000);
+    return true;
+  }
   const voice = options.voiceURI ? speechSynthesis.getVoices().find((v) => v.voiceURI === options.voiceURI) : undefined;
   let ended = false;
   const end = () => {
@@ -112,5 +136,7 @@ export function speak(text: string, options: SpeakOptions): boolean {
 export function stopSpeaking(): void {
   reading++;
   queued.clear();
+  window.clearTimeout(pretending);
+  pretending = 0;
   if (speechAvailable()) speechSynthesis.cancel();
 }

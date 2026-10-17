@@ -113,7 +113,8 @@ async function runFinder(tab: Browser.tabs.Tab | undefined, action: FinderAction
     return;
   }
   if (!probe) {
-    await showUnavailable(tab, 'unknown');
+    // Firefox runs nothing in its own pages (about:addons...), without saying so.
+    await showUnavailable(tab, tab.url === undefined || tab.url.startsWith('about:') ? 'browser-page' : 'unknown');
     return;
   }
   if (probe.pdf || !probe.html) {

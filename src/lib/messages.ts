@@ -28,6 +28,11 @@ export const EXTENSION_PAGE_MESSAGE = 'accessible-find:extension-page';
 
 /** e2e builds only: what would be read aloud, sent to the service worker for the tests. */
 export const E2E_SPOKEN_MESSAGE = 'accessible-find:e2e-spoken';
+/**
+ * e2e builds only, in storage.local: texts to pretend to read aloud, each for so many seconds,
+ * so the demo video shows reading as it looks with a real voice (headless Chrome has none).
+ */
+export const E2E_PRETEND_SPEECH_KEY = 'e2e:pretendSpeech';
 
 /** Global the finder content script registers in the extension's isolated world. */
 export const FINDER_GLOBAL = '__accessibleFind';

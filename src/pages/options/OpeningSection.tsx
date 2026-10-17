@@ -8,13 +8,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useCommandShortcut } from '@/hooks/use-command-shortcut';
 import { useEverySite } from '@/hooks/use-every-site';
 import { OPEN_COMMAND } from '@/lib/messages';
-import { ctrlFLabel, isCtrlF, nativeFindHint, openBrowserPage, shortcutsUrl } from '@/lib/platform';
+import { ctrlFLabel, isCtrlF, isFirefox, nativeFindHint, openShortcutSettings } from '@/lib/platform';
 
 const LIMITS = [
   { icon: Ban, text: 'The browser’s own pages: settings, history, downloads, the new tab page.' },
-  { icon: Ban, text: 'The extension store (Chrome Web Store, Edge Add-ons).' },
+  isFirefox
+    ? { icon: Ban, text: 'Firefox’s add-on store, and some other Mozilla sites (support, accounts).' }
+    : { icon: Ban, text: 'The extension store (Chrome Web Store, Edge Add-ons).' },
   { icon: FileText, text: 'PDFs shown in the browser’s built-in PDF viewer.' },
-  { icon: FileText, text: 'Files on your computer, unless you allow file access on the extension’s details page.' },
+  isFirefox
+    ? { icon: FileText, text: 'Files on your computer, unless “Ctrl+F on every website” is on.' }
+    : { icon: FileText, text: 'Files on your computer, unless you allow file access on the extension’s details page.' },
   { icon: Ban, text: 'Text inside embedded frames and form fields (not searched yet).' },
 ];
 
@@ -61,7 +65,7 @@ export function OpeningSection() {
                   opens on the second press.
                   Change it to another key, like Alt+Shift+F, or remove it.
                 </p>
-                <Button variant="outline" className="mt-2" onClick={() => openBrowserPage(shortcutsUrl())}>
+                <Button variant="outline" className="mt-2" onClick={() => openShortcutSettings()}>
                   Open shortcut settings
                   <ExternalLink aria-hidden />
                 </Button>
@@ -99,7 +103,7 @@ export function OpeningSection() {
             </p>
           </CardContent>
           <CardFooter>
-            <Button variant="outline" onClick={() => openBrowserPage(shortcutsUrl())}>
+            <Button variant="outline" onClick={() => openShortcutSettings()}>
               Change shortcut
               <ExternalLink aria-hidden />
             </Button>

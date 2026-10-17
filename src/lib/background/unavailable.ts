@@ -7,6 +7,8 @@ import { browser, type Browser } from 'wxt/browser';
 export type UnavailableReason =
   | 'browser-page'
   | 'store'
+  /** Mozilla's own sites, which Firefox keeps extensions off. */
+  | 'mozilla-site'
   | 'pdf'
   | 'not-html'
   | 'file'
@@ -18,16 +20,27 @@ export type UnavailableReason =
 export async function classifyInjectionError(error: unknown, url?: string): Promise<UnavailableReason> {
   const message = error instanceof Error ? error.message : String(error);
   const text = `${url ?? ''} ${message}`.toLowerCase();
-  if (/extensions gallery|chromewebstore\.google\.com|chrome\.google\.com\/webstore|microsoftedge\.microsoft\.com\/addons/.test(text)) {
+  if (
+    /extensions gallery|chromewebstore\.google\.com|chrome\.google\.com\/webstore|microsoftedge\.microsoft\.com\/addons|addons\.mozilla\.org/.test(
+      text,
+    )
+  ) {
     return 'store';
+  }
+  if (/support\.mozilla\.org|accounts\.firefox\.com|install\.mozilla\.org|services\.mozilla\.com|cdn\.mozilla\.net/.test(text)) {
+    return 'mozilla-site';
   }
   if (text.includes('file://')) {
     return (await browser.extension.isAllowedFileSchemeAccess()) ? 'blocked' : 'file';
   }
   if (/chrome-extension:|moz-extension:|\bextension:\/\//.test(text)) return 'extension-page';
-  if (/\b(chrome|edge|brave|opera|vivaldi|about|devtools|view-source|chrome-untrusted|chrome-search):/.test(text)) {
+  if (/\b(chrome|edge|brave|opera|vivaldi|about|devtools|view-source|chrome-untrusted|chrome-search|resource):/.test(text)) {
     return 'browser-page';
   }
+  // Firefox's PDF viewer can't be scripted, and only the address tells it's a PDF.
+  if (/\.pdf([?#]|$)/.test((url ?? '').toLowerCase())) return 'pdf';
+  // Firefox hides the address of its own pages (about:, view-source:) from extensions.
+  if (!url && text.includes('missing host permission')) return 'browser-page';
   if (text.includes('error page')) return 'error-page';
   if (/cannot access|permission/.test(text)) return 'blocked';
   return 'unknown';

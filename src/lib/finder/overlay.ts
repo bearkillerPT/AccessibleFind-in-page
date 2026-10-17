@@ -122,8 +122,9 @@ export class Overlay {
     this.port = channel.port1;
     this.port.onmessage = (e: MessageEvent<BarMessage>) => this.handlers.onMessage(e.data);
     // Not new URL(src).origin: with use_dynamic_url, src has a per-session id, but the
-    // document runs under the extension's real origin.
-    const origin = `chrome-extension://${browser.runtime.id}`;
+    // document runs under the extension's real origin (chrome-extension://<id>, or
+    // moz-extension://<this install's id> in Firefox).
+    const origin = new URL(browser.runtime.getURL('/')).origin;
     this.iframe.contentWindow?.postMessage({ type: CONNECT_MESSAGE, nonce }, origin, [channel.port2]);
     this.handlers.onConnect();
   }

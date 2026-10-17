@@ -4,7 +4,7 @@ Guidance for AI coding agents and contributors working on Accessible Find in Pag
 
 ## What this is
 
-A Chromium (Manifest V3) extension that replaces the browser's find-in-page (Ctrl+F) for people with low vision. The maintainer has retinitis pigmentosa (narrow field of view, glare sensitivity), so accessibility is the product, not a feature: matches must be easy to see and easy to locate on the screen.
+A Manifest V3 extension for Chromium browsers and Firefox (140 and newer) that replaces the browser's find-in-page (Ctrl+F) for people with low vision. The maintainer has retinitis pigmentosa (narrow field of view, glare sensitivity), so accessibility is the product, not a feature: matches must be easy to see and easy to locate on the screen.
 
 ## Ground rules
 
@@ -20,9 +20,11 @@ A Chromium (Manifest V3) extension that replaces the browser's find-in-page (Ctr
 | `npm run dev` | Dev browser with live reload |
 | `npm run build` | Production build into `.output/chrome-mv3` (load it unpacked) |
 | `npm run zip` | Chrome Web Store zip |
+| `npm run build:firefox` / `npm run zip:firefox` | The same for Firefox (`.output/firefox-mv3`); the zip comes with the source code zip AMO reviewers rebuild from |
 | `npm run typecheck` | TypeScript |
 | `npm test` | Unit tests (Vitest + happy-dom) |
 | `npm run test:e2e` | Builds with `--mode e2e`, then runs Playwright against real Chromium |
+| `npm run test:firefox` | The Firefox e2e build in the installed Firefox, through Puppeteer and WebDriver BiDi (`FIREFOX=<path>` for another one) |
 | `SCREENSHOTS=<dir> npm run test:e2e -- screenshots` | UI screenshots, light and dark |
 | `REAL_KEYS=1 xvfb-run -a npm run test:e2e -- real-keys` | Real key presses and real speech (needs `xdotool`; it moves the pointer and types, so keep it on a virtual display) |
 | `npm run icons` | Re-render `public/icon/*.png` from `assets/brand/*.svg` |
@@ -55,7 +57,7 @@ A Chromium (Manifest V3) extension that replaces the browser's find-in-page (Ctr
 4. **Install-time permissions stay `activeTab`, `scripting`, `storage`.** Any new required permission, especially host permissions, disables the extension for every existing user until they accept it. All-sites access stays in `optional_host_permissions` and is requested only from a user gesture.
 5. **Keep the command names `open_popup` and `read_aloud`.** Chrome stores users' custom shortcuts by command name.
 6. **Settings are versioned** (`schemaVersion` in sync storage). A new field only needs a default in `sanitize*`; renaming, moving or removing one needs a migration in `schema.ts` with unit tests. Always read through `sanitize*`. Writes are debounced, because sync storage allows about 120 writes a minute and 8 KB per item.
-7. **The page and the find bar talk only over the private `MessageChannel`.** The iframe URL carries a nonce, and the port is posted to `chrome-extension://${runtime.id}`, not the iframe's `src` origin: with `use_dynamic_url` they differ, and the message would be silently dropped.
+7. **The page and the find bar talk only over the private `MessageChannel`.** The iframe URL carries a nonce, and the port is posted to the extension's own origin (`runtime.getURL('/')`: `chrome-extension://<id>`, or `moz-extension://<this install's id>` in Firefox), not the iframe's `src` origin: with `use_dynamic_url` they differ, and the message would be silently dropped.
 8. **Motion is opt-out-able and safe.** Blinking stays at or under 3 flashes a second (interval at least 200 ms). No blinking or ring animation when the user or the OS asks for reduced motion.
 9. **Every-site hotkey copies already running in tabs obey `hotkeyEnabled` in `storage.local`.** Keep it in sync with the permission (`syncHotkeyScript` does).
 10. **Recent searches stay in `storage.local`, never in sync storage,** and are deleted when the user turns remembering off. Searches never leave the device.
@@ -91,4 +93,5 @@ A Chromium (Manifest V3) extension that replaces the browser's find-in-page (Ctr
 - The text index follows the layout like Chrome's find: block-level boxes (flex and grid items included) and inline blocks with text are blocks of their own, so matches never run from one into the next.
 - The reduced-motion rule in `globals.css` cuts every CSS animation to 0.01 ms, so a looping CSS animation would flicker instead of stopping. Anything that repeats (the blink and ring examples) runs on timers and the Web Animations API, and only while `useReducedMotion` allows it, which also honors the "Blinking and animation" setting.
 - Chrome styles every extension page's `body` with the system's UI font at 75% size. The unlayered `html body` rule in `globals.css` overrides that; keep it outside `@layer`, or the UI falls back to a smaller system font.
+- Firefox: browser-specific code checks `import.meta.env.FIREFOX` (or `isFirefox` in `platform.ts`), so each build keeps only its own. Content scripts run behind Xray wrappers there, which can't reach into proxies like `adoptedStyleSheets`: `pageView` in `highlighter.ts` edits it through the page's view (`wrappedJSObject`), the one place the extension uses it. Firefox's injection error is the same everywhere ("Missing host permission for the tab"), so `classifyInjectionError` goes by the address (addons.mozilla.org, Mozilla's other protected sites, `.pdf`), and Firefox hides the address of its own pages. The add-on id in `wxt.config.ts` (`accessible-find@bearkillerpt`) can never change once on AMO. Tailwind only scans `src` (`source("../")` in `globals.css`), so a build from the source zip matches the uploaded add-on byte for byte; keep it that way. Playwright can't load Firefox extensions, hence Puppeteer for `test:firefox`; it isn't told when extension pages load (`open()` in `tests/firefox/harness.ts` waits on the document), and match patterns can't hold a port, so look tabs up by URL yourself.
 - Known limitations: no search inside iframes, form fields or the PDF viewer; browser pages and the Web Store are off-limits to all extensions. Pages can see the CSS highlight registry and the overlay element while the bar is open.
